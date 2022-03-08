@@ -1,2 +1,11 @@
 .DS_Store
 Report
+*.aux
+*.log
+*.out
+*.gz
+*.png
+*.zip
+*.rar
+*.mat
+*.tex
