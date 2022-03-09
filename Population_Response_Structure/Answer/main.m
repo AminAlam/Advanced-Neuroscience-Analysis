@@ -5,7 +5,7 @@ close all
 load 'UnitsData.mat';
 
 nbins = 64;
-window_length = 5;
+window_length = 9;
 centers = linspace(-1.2, 2, nbins);
 %% Step 1
 %########################
@@ -73,9 +73,15 @@ legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
 clc
 close all
 
-% Modelling left and rigth cue
+% Modelling left and rigth cue - Single Units
 neuron_indxs = 1:numel(Unit);
 pVals = [];
+
+% shuffling boolian, 1 will shuffle the final labels
+shuffle_bool = 0;
+
+index_vec = 1:numel(Unit(1).Trls);
+index_vec = index_vec(randperm(length(index_vec)));
 
 for neuron_indx = neuron_indxs
     counts_all = [];
@@ -102,7 +108,11 @@ for neuron_indx = neuron_indxs
             y = [y; 0];
         end
     end
-
+    
+    if shuffle_bool
+        y = y(index_vec);
+    end
+    
     mdl = fitglm(all_counts, y);
     pVal = coefTest(mdl);
     pVals = [pVals, pVal];
@@ -121,7 +131,7 @@ for neuron_indx = best_units_cueLR(randi(length(best_units_cueLR), 15, 1))
     plot_indx = plot_indx+1;
 end
 legend({'[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg'})
-LR_pVals_mean = mean(pVals);
+LR_pVals_mean = mean(pVals)
 
 figure
 histogram(pVals, 'Normalization', 'pdf')
@@ -174,8 +184,15 @@ boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 
 patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
-%% Modelling Reward expected value
+%% Modelling Reward expected value - Single Units
 pVals = [];
+neuron_indxs = 1:numel(Unit);
+
+% shuffling boolian, 1 will shuffle the final labels
+shuffle_bool = 1;
+
+index_vec = 1:numel(Unit(1).Trls);
+index_vec = index_vec(randperm(length(index_vec)));
 
 for neuron_indx = neuron_indxs
     counts_all = [];
@@ -222,7 +239,11 @@ for neuron_indx = neuron_indxs
             y = [y; 9];
         end
     end
-
+    
+    if shuffle_bool
+        y = y(index_vec);
+    end
+    
     mdl = fitglm(all_counts, y);
     pVal = coefTest(mdl);
     pVals = [pVals, pVal];
@@ -297,9 +318,16 @@ boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 
 patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
-%% Modelling left and rigth cue  and also Reward expected value
+%% Modelling left and rigth cue  and also Reward expected value - Single Units
 
 pVals = [];
+neuron_indxs = 1:numel(Unit);
+
+% shuffling boolian, 1 will shuffle the final labels
+shuffle_bool = 1;
+
+index_vec = 1:numel(Unit(1).Trls);
+index_vec = index_vec(randperm(length(index_vec)));
 
 for neuron_indx = neuron_indxs
     counts_all = [];
@@ -379,7 +407,11 @@ for neuron_indx = neuron_indxs
             y = [y; 6];
         end
     end
-
+    
+    if shuffle_bool
+        y = y(index_vec);
+    end
+    
     mdl = fitglm(all_counts, y);
     pVal = coefTest(mdl);
     pVals = [pVals, pVal];
@@ -455,6 +487,193 @@ patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
 
+%% Modelling left and rigth cue - Population
+
+neuron_indxs = 1:numel(Unit);
+y = [];
+all_counts = [];
+
+for neuron_indx = neuron_indxs
+    counts_all = [];
+    trials_indx_1 = [];
+    trials_indx_2 = [];
+    
+    pos = -1;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value(2) == pos
+            trials_indx_1 = [trials_indx_1; cnd.TrialIdx];
+        end
+    end
+    pos = 1;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value(2) == pos
+            trials_indx_2 = [trials_indx_2; cnd.TrialIdx];
+        end
+    end
+    
+    data = Unit(neuron_indx).Trls(trials_indx_1);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 0];
+
+    data = Unit(neuron_indx).Trls(trials_indx_2);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 1];
+end
+
+mdl = fitglm(all_counts, y);
+pVal_lr_population = coefTest(mdl);
+%% Modelling Reward expected value - Population
+
+neuron_indxs = 1:numel(Unit);
+y = [];
+all_counts = [];
+
+for neuron_indx = neuron_indxs
+    counts_all = [];
+    trials_indx_1 = [];
+    trials_indx_2 = [];
+    trials_indx_3 = [];
+    
+    EV = 3;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value(1) == EV
+            trials_indx_1 = [trials_indx_1; cnd.TrialIdx];
+        end
+    end
+    EV = 6;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value(1) == EV
+            trials_indx_2 = [trials_indx_2; cnd.TrialIdx];
+        end
+    end
+    EV = 9;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value(1) == EV
+            trials_indx_3 = [trials_indx_3; cnd.TrialIdx];
+        end
+    end
+    
+    data = Unit(neuron_indx).Trls(trials_indx_1);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 3];
+
+    data = Unit(neuron_indx).Trls(trials_indx_2);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 6];
+
+    data = Unit(neuron_indx).Trls(trials_indx_3);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 9];
+end
+
+mdl = fitglm(all_counts, y);
+pVal_EV_population = coefTest(mdl);
+%% Modelling left and rigth cue and also Reward expected value - Population
+
+neuron_indxs = 1:numel(Unit);
+y = [];
+all_counts = [];
+for neuron_indx = neuron_indxs
+    counts_all = [];
+    trials_indx_1 = [];
+    trials_indx_2 = [];
+    trials_indx_3 = [];
+    trials_indx_4 = [];
+    trials_indx_5 = [];
+    trials_indx_6 = [];
+    
+    pos = -1;
+    
+    EV = 3;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_1 = [trials_indx_1; cnd.TrialIdx];
+        end
+    end
+    EV = 6;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_2 = [trials_indx_2; cnd.TrialIdx];
+        end
+    end
+    EV = 9;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_3 = [trials_indx_3; cnd.TrialIdx];
+        end
+    end
+    
+    pos = 1;
+    
+    EV = 3;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_4 = [trials_indx_4; cnd.TrialIdx];
+        end
+    end
+    EV = 6;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_5 = [trials_indx_5; cnd.TrialIdx];
+        end
+    end
+    EV = 9;
+    for i = 1:numel(Unit(neuron_indx).Cnd)
+        cnd = Unit(neuron_indx).Cnd(i);
+        if cnd.Value == [EV, pos]
+            trials_indx_6 = [trials_indx_6; cnd.TrialIdx];
+        end
+    end
+
+    data = Unit(neuron_indx).Trls(trials_indx_1);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 1];
+
+    data = Unit(neuron_indx).Trls(trials_indx_2);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 2];
+
+    data = Unit(neuron_indx).Trls(trials_indx_3);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 3];
+
+    data = Unit(neuron_indx).Trls(trials_indx_4);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 4];
+
+    data = Unit(neuron_indx).Trls(trials_indx_5);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 5];
+
+    data = Unit(neuron_indx).Trls(trials_indx_6);
+    [counts,~] = PSTH(data, window_length, nbins, centers);
+    all_counts = [all_counts; counts];
+    y = [y; 6];
+end
+
+mdl = fitglm(all_counts, y);
+pVal_LR_EV_population = coefTest(mdl);
+
 %% Step 3
 %########################
 % Plotting the population activity in lower dimension by using 
@@ -501,6 +720,7 @@ for i = 1:6
     all_data_reduced(:,i) = Z(1, :);
     plot(centers, all_data_reduced(:, i), 'LineWidth', 2)
 end
+
 xline(0,'r', 'Reward Cue');
 xline(0.3,'m','Delay Period');
 xline(0.9,'b', 'Reaction');
@@ -591,8 +811,3 @@ legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
 %########################
 % Shuffling the data and repeating the above steps
 %########################
-
-
-
-%% GEVD
-
