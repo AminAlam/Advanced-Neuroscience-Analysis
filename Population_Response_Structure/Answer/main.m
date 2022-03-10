@@ -7,6 +7,7 @@ load 'UnitsData.mat';
 nbins = 64;
 window_length = 9;
 centers = linspace(-1.2, 2, nbins);
+save_figures = 1;
 %% Step 1
 %########################
 % Calculate the PSTH for the units and plot the average 
@@ -19,6 +20,12 @@ close all
 neuron_indx = floor(rand(1)*numel(Unit));
 figure
 PSTHPlot(Unit, neuron_indx, window_length, nbins, centers)
+
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step1_unit"+num2str(neuron_indx),'-dpng','-r0')
+end
 %% average PSTH for each condition of the task
 figure
 hold on
@@ -65,6 +72,11 @@ boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 
 patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step1_AvgUnits",'-dpng','-r0')
+end
 %% Step 2
 %########################
 % Using GLM analysis to find out which units significantly encode
@@ -78,7 +90,7 @@ neuron_indxs = 1:numel(Unit);
 pVals = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 
 index_vec = 1:numel(Unit(1).Trls);
 index_vec = index_vec(randperm(length(index_vec)));
@@ -121,7 +133,7 @@ end
 [~, col] = find(pVals<0.01);
 best_units_cueLR = neuron_indxs(col);
 
-figure
+figure('units','normalized','outerposition',[0 0 1 1])
 plot_indx = 1;
 for neuron_indx = best_units_cueLR(randi(length(best_units_cueLR), 15, 1))
     subplot(3, 5, plot_indx)
@@ -133,12 +145,21 @@ end
 legend({'[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg'})
 LR_pVals_mean = mean(pVals)
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_pos1_"+num2str(shuffle_bool),'-dpng','-r0')
+end
+
 figure
 histogram(pVals, 'Normalization', 'pdf')
 xlabel('pValue')
-ylabel('counts')
-title('Histogram of pValues for Cue Pos')
+ylabel('Probability')
+title('Histogram of pValues for Cue Pos (PDF Estimation)')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_pos2_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 
 figure
 hold on
@@ -169,6 +190,7 @@ xlim([-1.2, 2])
 ylim([min(counts_all_mean)-10, max(counts_all_mean)+10])
 xlabel("Time (s)")
 ylabel('Firing Rate (Hz)')
+title('Avg PSTH of The Units with pValue < 0.01')
 
 
 box = [0 0 0.3 0.3];
@@ -184,6 +206,11 @@ boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 
 patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_pos3_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 %% Modelling Reward expected value - Single Units
 clc
 close all
@@ -191,7 +218,7 @@ pVals = [];
 neuron_indxs = 1:numel(Unit);
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 
 index_vec = 1:numel(Unit(1).Trls);
 index_vec = index_vec(randperm(length(index_vec)));
@@ -254,9 +281,8 @@ end
 [~, col] = find(pVals<0.01);
 best_units_EV = neuron_indxs(col);
 
-figure
+figure('units','normalized','outerposition',[0 0 1 1])
 plot_indx = 1;
-
 for neuron_indx = best_units_EV(randi(length(best_units_EV), 15, 1))
     subplot(3, 5, plot_indx)
     PSTHPlot(Unit, neuron_indx, window_length, nbins, centers)
@@ -268,12 +294,22 @@ end
 legend({'[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg'})
 REV_pVals_mean = mean(pVals)
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_EV_pos1_"+num2str(shuffle_bool),'-dpng','-r0')
+end
+
+
 figure
 histogram(pVals, 'Normalization', 'pdf')
 xlabel('pValue')
-ylabel('counts')
-title('Histogram of pValues for Cue reward EV')
+ylabel('Probability')
+title('Histogram of pValues for Reward Expected Value (PDF Estimation)')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_EV_pos2_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 
 figure
 hold on
@@ -304,7 +340,7 @@ xlim([-1.2, 2])
 ylim([min(counts_all_mean)-10, max(counts_all_mean)+10])
 xlabel("Time (s)")
 ylabel('Firing Rate (Hz)')
-
+title('Avg PSTH of The Units with pValue < 0.01')
 
 box = [0 0 0.3 0.3];
 boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 min(counts_all_mean)-10];
@@ -319,6 +355,11 @@ boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 
 patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_EV_pos3_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 %% Modelling left and rigth cue  and also Reward expected value - Single Units
 clc
 close all
@@ -326,7 +367,7 @@ pVals = [];
 neuron_indxs = 1:numel(Unit);
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 
 index_vec = 1:numel(Unit(1).Trls);
 index_vec = index_vec(randperm(length(index_vec)));
@@ -422,9 +463,8 @@ end
 [~, col] = find(pVals<0.01);
 best_units = neuron_indxs(col);
 
-figure
+figure('units','normalized','outerposition',[0 0 1 1])
 plot_indx = 1;
-
 for neuron_indx = best_units(randi(length(best_units), 15, 1))
     subplot(3, 5, plot_indx)
     PSTHPlot(Unit, neuron_indx, window_length, nbins, centers)
@@ -434,15 +474,23 @@ for neuron_indx = best_units(randi(length(best_units), 15, 1))
 end
 
 legend({'[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg'})
-REV_LR_pVals_mean = mean(pVals)
+REV_allCond_pVals_mean = mean(pVals)
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_all_pos1_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 
 figure
 histogram(pVals, 'Normalization', 'pdf')
 xlabel('pValue')
-ylabel('counts')
-title('Histogram of pValues for all 6 conditons')
+ylabel('Probability')
+title('Histogram of pValues for All 6 Conditions (PDF Estimation)')
 
-
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_all_pos2_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 
 figure
 hold on
@@ -473,7 +521,7 @@ xlim([-1.2, 2])
 ylim([min(counts_all_mean)-10, max(counts_all_mean)+10])
 xlabel("Time (s)")
 ylabel('Firing Rate (Hz)')
-
+title('Avg PSTH of The Units with pValue < 0.01')
 
 box = [0 0 0.3 0.3];
 boxy = [min(counts_all_mean)-10 max(counts_all_mean)+10 max(counts_all_mean)+10 min(counts_all_mean)-10];
@@ -489,6 +537,10 @@ patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Avg')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("step2_all_pos3_"+num2str(shuffle_bool),'-dpng','-r0')
+end
 %% Modelling left and rigth cue - Population
 clc
 close all
@@ -498,7 +550,7 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 index_vec = 1:numel(Unit)*2;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -548,7 +600,7 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 index_vec = 1:numel(Unit)*3;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -611,7 +663,7 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 index_vec = 1:numel(Unit)*6;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -1422,3 +1474,80 @@ ylabel('Dim 2 Units')
 zlabel('Dim 3 Units')
 
 legend('3', '6', '9')
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%% CFR
+% reducing units dimensinos to 1 - all conditions
+clc
+% close all
+
+% shuffling boolian, 1 will shuffle the Units labels
+shuffle_bool = 1;
+
+all_data = zeros(numel(Unit), nbins, 6);
+
+cue_indx = 1;
+for cue_value = 3:3:9
+    for pos = [-1, 1]
+        counts_all = [];
+        value = [cue_value, pos];
+        for neuron_indx = 1:numel(Unit)
+            data = get_condition(Unit, neuron_indx, value);
+            [counts,~] = PSTH(data, window_length, nbins, centers);
+            all_data(neuron_indx, :, cue_indx) = counts;
+        end
+        cue_indx = cue_indx+1;
+    end
+end
+surrogate_type = 'surrogate-TNC';
+model_dim = 6;
+times_msk = centers>=0;
+
+if shuffle_bool
+    all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+    all_data = permute(all_data_s, [2,1,3]);
+end
+
+figure
+hold on
+all_data_reduced = zeros(size(all_data, 2), size(all_data, 3));
+
+for i = 1:6
+    cov_mat = cov(all_data(:,:,i)');
+    [V,D] = eig(cov_mat);
+    D = diag(D);
+    [D, I] = sort(D, 'descend');
+    D = diag(D);
+    V = V(:, I);
+    V(:,2:end) = 0;
+
+    B = sqrt(inv(D));
+    A = V';
+    Z = B*A*all_data(:,:,i);
+
+    all_data_reduced(:,i) = Z(1, :);
+    plot(centers, all_data_reduced(:, i), 'LineWidth', 2)
+end
+
+xline(0,'r', 'Reward Cue');
+xline(0.3,'m','Delay Period');
+xline(0.9,'b', 'Reaction');
+xlim([-1.2, 2])
+ylim([min(all_data_reduced,[],'all')-1, max(all_data_reduced,[],'all')+1])
+xlabel("Time (s)")
+ylabel('Firing Rate (Hz)')
+title("PSTH of Dimension-Reduced Activity")
+
+box = [0 0 0.3 0.3];
+boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
+patch(box,boxy,'r','FaceAlpha',0.1)
+
+box = [0.3 0.3 0.9 0.9];
+boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
+patch(box,boxy,'m','FaceAlpha',0.1)
+
+box = [0.9 0.9 2 2];
+boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
+patch(box,boxy,'b','FaceAlpha',0.1)
+
+legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
+hold off
