@@ -601,7 +601,7 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 1;
+shuffle_bool = 0;
 
 index_vec = 1:numel(Unit)*3;
 index_vec = index_vec(randperm(length(index_vec)));
@@ -665,7 +665,7 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 0;
+shuffle_bool = 1;
 
 index_vec = 1:numel(Unit)*6;
 index_vec = index_vec(randperm(length(index_vec)));
