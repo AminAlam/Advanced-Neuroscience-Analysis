@@ -1079,7 +1079,8 @@ clc
 % close all
 
 % shuffling boolian, 1 will shuffle the Units labels
-shuffle_bool = 0;
+shuffle_bool = 1;
+cfr_bool = 1;
 
 all_data = zeros(numel(Unit), nbins, 6);
 
@@ -1097,11 +1098,20 @@ for cue_value = 3:3:9
     end
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 6;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:6;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:6;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1149,12 +1159,18 @@ patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
 hold off
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_1_"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
+end
 %% reducing units dimensinos to 2 - all conditions
 clc
 % close all
 
 % shuffling boolian, 1 will shuffle the Units labels
 shuffle_bool = 1;
+cfr_bool = 1;
 
 all_data = zeros(numel(Unit), nbins, 6);
 
@@ -1172,11 +1188,20 @@ for cue_value = 3:3:9
     end
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 6;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:6;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:6;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1200,8 +1225,8 @@ for i = 1:6
     hold on
 end
 xlabel('Time (s)')
-ylabel('Dim 1 Units')
-zlabel('Dim 2 Units')
+ylabel('Unit I')
+zlabel('Unit II')
 
 xlim([-1.2, 2])
 
@@ -1221,13 +1246,18 @@ s.EdgeColor = 'none';
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]', 'Reward Cue', 'Delay Period', 'Reaction')
 hold off
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_2_"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
+end
 %% Plotting First Three PCs of the data in 3D coords - all conditions
 clc
 % close all
 
 % shuffling boolian, 1 will shuffle the Units labels
-shuffle_bool = 0;
-
+shuffle_bool = 1;
+cfr_bool = 1;
 all_data = zeros(numel(Unit), nbins, 6);
 
 cue_indx = 1;
@@ -1244,11 +1274,20 @@ for cue_value = 3:3:9
     end
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 6;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:6;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:6;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1266,17 +1305,23 @@ for i = 1:6
     plot3(all_data_reduced(1,:,i), all_data_reduced(2,:,i), all_data_reduced(3,:,i), 'LineWidth', 2)
     hold on
 end
-xlabel('Dim 1 Units')
-ylabel('Dim 2 Units')
-zlabel('Dim 3 Units')
+xlabel('PC I')
+ylabel('PC II')
+zlabel('PC III')
 
 legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_3_"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
+end
 %% reducing units dimensinos to 1 - Just Expected Value
 clc
 % close all
 
 % shuffling boolian, 1 will shuffle the Units labels
 shuffle_bool = 1;
+cfr_bool = 1;
 
 all_data_tmp = zeros(numel(Unit), nbins, 6);
 all_data = zeros(2*numel(Unit), nbins, 3);
@@ -1296,11 +1341,20 @@ for cue_value = 3:3:9
     all_data(:,:,cue_value/3) = [all_data_tmp(:,:,cue_indx-2); all_data_tmp(:,:,cue_indx-1)];
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 3;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:3;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:3;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1347,12 +1401,18 @@ patch(box,boxy,'b','FaceAlpha',0.1)
 
 legend('3', '6', '9', 'Reward Cue', 'Delay Period', 'Reaction')
 hold off
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_1_2_"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
+end
 %% reducing units dimensinos to 2 - Just Expected Value
 clc
-% close all
+close all
 
 % shuffling boolian, 1 will shuffle the Units labels
 shuffle_bool = 1;
+cfr_bool = 1;
 
 all_data_tmp = zeros(numel(Unit), nbins, 6);
 all_data = zeros(2*numel(Unit), nbins, 3);
@@ -1372,11 +1432,20 @@ for cue_value = 3:3:9
     all_data(:,:,cue_value/3) = [all_data_tmp(:,:,cue_indx-2); all_data_tmp(:,:,cue_indx-1)];
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 3;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:3;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:3;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1400,8 +1469,8 @@ for i = 1:3
     hold on
 end
 xlabel('Time (s)')
-ylabel('Dim 1 Units')
-zlabel('Dim 2 Units')
+ylabel('Unit I')
+zlabel('Unit II')
 
 xlim([-1.2, 2])
 
@@ -1422,9 +1491,13 @@ s.EdgeColor = 'none';
 legend('3', '6', '9', 'Reward Cue', 'Delay Period', 'Reaction')
 hold off
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_2_2"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
+end
 %% Plotting First Three PCs of the data in 3D coords - Just Expected Value
 clc
-% close all
+close all
 
 % shuffling boolian, 1 will shuffle the Units labels
 shuffle_bool = 1;
@@ -1469,85 +1542,13 @@ for i = 1:3
     plot3(all_data_reduced(1,:,i), all_data_reduced(2,:,i), all_data_reduced(3,:,i), 'LineWidth', 2)
     hold on
 end
-xlabel('Dim 1 Units')
-ylabel('Dim 2 Units')
-zlabel('Dim 3 Units')
+xlabel('PC I')
+ylabel('PC II')
+zlabel('PC III')
 
 legend('3', '6', '9')
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%% CFR
-% reducing units dimensinos to 1 - all conditions
-clc
-% close all
-
-% shuffling boolian, 1 will shuffle the Units labels
-shuffle_bool = 1;
-
-all_data = zeros(numel(Unit), nbins, 6);
-
-cue_indx = 1;
-for cue_value = 3:3:9
-    for pos = [-1, 1]
-        counts_all = [];
-        value = [cue_value, pos];
-        for neuron_indx = 1:numel(Unit)
-            data = get_condition(Unit, neuron_indx, value);
-            [counts,~] = PSTH(data, window_length, nbins, centers);
-            all_data(neuron_indx, :, cue_indx) = counts;
-        end
-        cue_indx = cue_indx+1;
-    end
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/step3_3_2"+num2str(shuffle_bool),'-dpng','-r0')
 end
-surrogate_type = 'surrogate-TNC';
-model_dim = 6;
-times_msk = centers>=0;
-
-if shuffle_bool
-    all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
-    all_data = permute(all_data_s, [2,1,3]);
-end
-
-figure
-hold on
-all_data_reduced = zeros(size(all_data, 2), size(all_data, 3));
-
-for i = 1:6
-    cov_mat = cov(all_data(:,:,i)');
-    [V,D] = eig(cov_mat);
-    D = diag(D);
-    [D, I] = sort(D, 'descend');
-    D = diag(D);
-    V = V(:, I);
-    V(:,2:end) = 0;
-
-    B = sqrt(inv(D));
-    A = V';
-    Z = B*A*all_data(:,:,i);
-
-    all_data_reduced(:,i) = Z(1, :);
-    plot(centers, all_data_reduced(:, i), 'LineWidth', 2)
-end
-
-xline(0,'r', 'Reward Cue');
-xline(0.3,'m','Delay Period');
-xline(0.9,'b', 'Reaction');
-xlim([-1.2, 2])
-ylim([min(all_data_reduced,[],'all')-1, max(all_data_reduced,[],'all')+1])
-xlabel("Time (s)")
-ylabel('Firing Rate (Hz)')
-title("PSTH of Dimension-Reduced Activity")
-
-box = [0 0 0.3 0.3];
-boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
-patch(box,boxy,'r','FaceAlpha',0.1)
-
-box = [0.3 0.3 0.9 0.9];
-boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
-patch(box,boxy,'m','FaceAlpha',0.1)
-
-box = [0.9 0.9 2 2];
-boxy = [min(all_data_reduced,[],'all')-1 max(all_data_reduced,[],'all')+1 max(all_data_reduced,[],'all')+1 min(all_data_reduced,[],'all')-1];
-patch(box,boxy,'b','FaceAlpha',0.1)
-
-legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
-hold off
