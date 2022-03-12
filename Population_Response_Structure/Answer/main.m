@@ -550,7 +550,8 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 1;
+shuffle_bool = 0;
+
 index_vec = 1:numel(Unit)*2;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -601,6 +602,7 @@ all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
 shuffle_bool = 1;
+
 index_vec = 1:numel(Unit)*3;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -663,7 +665,8 @@ y = [];
 all_counts = [];
 
 % shuffling boolian, 1 will shuffle the final labels
-shuffle_bool = 1;
+shuffle_bool = 0;
+
 index_vec = 1:numel(Unit)*6;
 index_vec = index_vec(randperm(length(index_vec)));
 
@@ -1501,7 +1504,7 @@ close all
 
 % shuffling boolian, 1 will shuffle the Units labels
 shuffle_bool = 1;
-
+cfr_bool = 1;
 all_data_tmp = zeros(numel(Unit), nbins, 6);
 all_data = zeros(2*numel(Unit), nbins, 3);
 
@@ -1520,11 +1523,20 @@ for cue_value = 3:3:9
     all_data(:,:,cue_value/3) = [all_data_tmp(:,:,cue_indx-2); all_data_tmp(:,:,cue_indx-1)];
 end
 
+surrogate_type = 'surrogate-TNC';
+model_dim = 3;
+times_msk = centers>=0;
+
 if shuffle_bool
-    for neuron_indx = 1:numel(Unit)
-        index_vec = 1:3;
-        index_vec = index_vec(randperm(length(index_vec)));
-        all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:3;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
     end
 end
 
@@ -1550,5 +1562,5 @@ legend('3', '6', '9')
 
 if save_figures
     set(gcf,'PaperPositionMode','auto')
-    print("Report/images/step3_3_2"+num2str(shuffle_bool),'-dpng','-r0')
+    print("Report/images/step3_3_2"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
 end

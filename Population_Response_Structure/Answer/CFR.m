@@ -1,7 +1,7 @@
 function surrTensor = CFR(dataTensor, surrogate_type, model_dim, times_msk)
 
     [targetSigmaT, targetSigmaN, targetSigmaC, M] = extractFeatures(dataTensor);
-    numSurrogates = 40;
+    numSurrogates = 20;
     params = [];
     params.readout_mode = 2;         % select readout mode (eg neuron mode)
     params.shfl_mode = 3;         % shuffle across tensor mode (eg condition mode)
