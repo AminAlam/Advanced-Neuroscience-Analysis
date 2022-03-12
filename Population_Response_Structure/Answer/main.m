@@ -1564,3 +1564,69 @@ if save_figures
     set(gcf,'PaperPositionMode','auto')
     print("Report/images/step3_3_2"+num2str(shuffle_bool)+num2str(cfr_bool),'-dpng','-r0')
 end
+%% GEVD
+
+clc
+close all
+
+
+shuffle_bool = 0;
+cfr_bool = 0;
+
+all_data = zeros(numel(Unit), nbins, 6);
+
+cue_indx = 1;
+for cue_value = 3:3:9
+    for pos = [-1, 1]
+        counts_all = [];
+        value = [cue_value, pos];
+        for neuron_indx = 1:numel(Unit)
+            data = get_condition(Unit, neuron_indx, value);
+            [counts,~] = PSTH(data, window_length, nbins, centers);
+            all_data(neuron_indx, :, cue_indx) = counts;
+        end
+        cue_indx = cue_indx+1;
+    end
+end
+
+surrogate_type = 'surrogate-TNC';
+model_dim = 6;
+times_msk = centers>=0;
+
+if shuffle_bool
+    if cfr_bool
+        all_data_s = CFR(permute(all_data, [2,1,3]), surrogate_type, model_dim, times_msk);
+        all_data = permute(all_data_s, [2,1,3]);
+    else
+        for neuron_indx = 1:numel(Unit)
+            index_vec = 1:6;
+            index_vec = index_vec(randperm(length(index_vec)));
+            all_data(neuron_indx,:,:) = all_data(neuron_indx, :, index_vec);
+        end 
+    end
+end
+%% GEVD
+figure
+
+for i = 1:6
+    C = cov(all_data(:,:,i)');
+    all_data_tmp = all_data;
+    all_data_tmp(:, 1:24, i) = 0;
+    C_bar = cov(all_data_tmp(:,:,i)');
+    C_bar = C_bar+C_bar';
+
+    [V,D] = eig(C_bar, C);
+
+    D = diag(D);
+    [D, indx] = sort(D, 'descend');
+    V = V(:,indx);
+    W = V(:,1);
+    S1 = W'*all_data(:,:,i);
+    plot(S1, 'LineWidth', 2)
+    hold on
+end
+
+legend('[3 -1]', '[3 1]', '[6 -1]', '[6 1]', '[9 -1]', '[9 1]')
+
+
+
