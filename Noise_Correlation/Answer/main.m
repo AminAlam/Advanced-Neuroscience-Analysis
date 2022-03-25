@@ -246,8 +246,9 @@ for monk_no = 1:3
                 firing_rate_mat_tmp(counter, 1) = sum(counts(neuron_no, :));
                 counter = counter+1;
             end
+            firing_rate_mat_tmp(counter-200:counter-1) = zscore(firing_rate_mat_tmp(counter-200:counter-1));
         end
-        firing_rate_mat(:, neuron_no) = zscore(firing_rate_mat_tmp);
+        firing_rate_mat(:, neuron_no) = firing_rate_mat_tmp;
     end
     r_sc_mat = corrcoef(firing_rate_mat);
     r_sc{monk_no} = r_sc_mat;
@@ -345,7 +346,7 @@ for monk_no = 1:3
     for i = 1:4
         errorbar(1000*plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
     end
-    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5')
+    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5','NumColumns',2)
     xlim([0, 4.5])
     title("Mokey No."+num2str(monk_no))
     xlabel("Distance between electrodes (mm)")
@@ -370,64 +371,116 @@ for monk_no = 1:3
         end
     end
 
-    [distace_vec_sorted, I] = sort(distace_vec);
-    r_s_vec_sorted = r_s_vec(I);
+    [r_s_vec_sorted, I] = sort(r_s_vec);
+    distace_vec_sorted = distace_vec(I);
     r_sc_vec_sorted = r_sc_vec(I);
 
-    plot_all = zeros(4, 8, 3);
+    plot_all = zeros(4, 7, 3);
 
     counter = 1;
     for r_s_value = -0.75:0.25:0.75
-        [~, col] = find(r_s_vec_sorted>=r_s_value-0.26 & r_s_vec_sorted<r_s_value+0.26);
+        [~, col] = find(r_s_vec_sorted>=r_s_value-0.126 & r_s_vec_sorted<r_s_value+0.126);
         r_s_tmp = r_s_vec_sorted(col);
         distance_tmp = distace_vec_sorted(col);
         r_sc_tmp = r_sc_vec_sorted(col);
 
-        [~, col_2] = find(distance_tmp>=3);
+        [~, col_2] = find(distance_tmp>=3e-3);
         r_sc_tmp2 = r_sc_tmp(col_2);
-        r_s_tmp2 = r_s_tmp(col_2);
-        distance_tmp2 = mean(distance_tmp(col_2));
+        r_s_tmp2 = mean(r_s_tmp(col_2));
+        distance_tmp2 = distance_tmp(col_2);
         r_sc_mean = mean(r_sc_tmp2);
         r_sc_var = var(r_sc_tmp2);
-        plot_all(1,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
-
-        [~, col_2] = find(r_s_tmp>=0 & r_s_tmp<0.5);
-        r_sc_tmp2 = r_sc_tmp(col_2);
-        distance_tmp2 = mean(distance_tmp(col_2));
-        r_sc_mean = mean(r_sc_tmp2);
-        r_sc_var = var(r_sc_tmp2);
-        plot_all(2,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
-
-        [~, col_2] = find(r_s_tmp>=-0.5 & r_s_tmp<0);
-        r_sc_tmp2 = r_sc_tmp(col_2);
-        distance_tmp2 = mean(distance_tmp(col_2));
-        r_sc_mean = mean(r_sc_tmp2);
-        r_sc_var = var(r_sc_tmp2);
-        plot_all(3,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+        plot_all(1,counter,:) = [r_s_tmp2, r_sc_mean, r_sc_var];
         
-        [~, col_2] = find(r_s_tmp<-0.5);
+        [~, col_2] = find(distance_tmp>=2e-3 & distance_tmp<3e-3);
         r_sc_tmp2 = r_sc_tmp(col_2);
-        distance_tmp2 = mean(distance_tmp(col_2));
+        r_s_tmp2 = mean(r_s_tmp(col_2));
+        distance_tmp2 = distance_tmp(col_2);
         r_sc_mean = mean(r_sc_tmp2);
         r_sc_var = var(r_sc_tmp2);
-        plot_all(4,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
-
+        plot_all(2,counter,:) = [r_s_tmp2, r_sc_mean, r_sc_var];
+        
+        [~, col_2] = find(distance_tmp>=1e-3 & distance_tmp<2e-3);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        r_s_tmp2 = mean(r_s_tmp(col_2));
+        distance_tmp2 = distance_tmp(col_2);
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(3,counter,:) = [r_s_tmp2, r_sc_mean, r_sc_var];
+        
+        [~, col_2] = find(distance_tmp>=0 & distance_tmp<1e-3);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        r_s_tmp2 = mean(r_s_tmp(col_2));
+        distance_tmp2 = distance_tmp(col_2);
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(4,counter,:) = [r_s_tmp2, r_sc_mean, r_sc_var];
         counter = counter+1;
     end
 
     figure
     hold on
     for i = 1:4
-        plot(1000*plot_all(i,:,1), plot_all(i,:,2), 'color', [0,0,0]+i/8, 'LineWidth', 5-i)
+        plot(plot_all(i,:,1), plot_all(i,:,2), 'color', [0,0,0]+i/8, 'LineWidth', i)
     end
     for i = 1:4
-        errorbar(1000*plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
+        errorbar(plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
     end
-    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5')
-    xlim([0, 4.5])
+    legend('Distance > 3mm', 'Distance 2 to 3', 'Distance 1 to 2', 'Distance 1 to 2','Location','southeast','NumColumns',1)
+    xlim([-1, 1])
     title("Mokey No."+num2str(monk_no))
-    xlabel("Distance between electrodes (mm)")
+    xlabel("Orientation tuning similarity (r_s)")
     ylabel("Spike count correlation (r_{sc})")
 end
 
+%% plotting r_sc vs r_s vs elec_distances
+clc
+close all
 
+bin_step_rs = 0.4;
+bin_length_rs = bin_step_rs/2;
+r_s_values = -1:bin_step_rs:1;
+
+bin_step_distance = 0.4e-3;
+bin_length_distance = bin_step_distance/2;
+distance_values = 0:bin_step_distance:4.4e-3;
+
+for monk_no = 1:3
+    r_s_mat = r_s{monk_no};
+    r_sc_mat = r_sc{monk_no};
+    distance_mat = elec_distances{monk_no};
+    r_sc_vec = [];
+    r_s_vec = [];
+    distace_vec = [];
+    for neuron_1 = 1:size(r_s_mat, 1)-1
+        for neuron_2 = neuron_1+1:size(r_s_mat, 1)
+            r_s_vec = [r_s_vec, r_s_mat(neuron_1, neuron_2)];
+            r_sc_vec = [r_sc_vec, r_sc_mat(neuron_1, neuron_2)];
+            distace_vec = [distace_vec, distance_mat(neuron_1, neuron_2)];
+        end
+    end    
+    
+    C_data = zeros(length(r_s_values), length(distance_values));
+    counter_distance = 1;
+    values_all = [r_s_vec; distace_vec; r_sc_vec];
+    for distance_value = distance_values
+        counter_rs = 1;
+        for r_s_value = r_s_values
+            [~, col] = find(values_all(1, :)>r_s_value-bin_length_rs & values_all(1, :)<r_s_value+bin_length_rs ...
+                & values_all(2, :)>distance_value-bin_length_distance & values_all(2, :)<distance_value+bin_length_distance);
+            if ~isempty(col)
+                C_data(counter_rs, counter_distance) = values_all(3, col(1));
+            end
+            counter_rs = counter_rs+1;
+        end
+        counter_distance = counter_distance+1;
+    end
+    figure
+    pcolor(distance_values*1000, r_s_values, C_data)
+    colorbar
+    shading interp
+    colormap jet
+    title("Mokey No."+num2str(monk_no))
+    xlabel("Distance between electrodes (mm)")
+    ylabel("Orientation tuning similarity (r_s)")
+end
