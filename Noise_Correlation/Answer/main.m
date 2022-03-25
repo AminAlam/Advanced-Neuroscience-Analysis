@@ -220,7 +220,6 @@ for monk_no = 1:3
     end
     tuning_curves{monk_no} = activity_mat;
 end
-
 %% calculating r_s
 for monk_no = 1:3
     tuning_curve_mat = tuning_curves{monk_no};
@@ -237,24 +236,20 @@ end
 for monk_no = 1:3
     data =  monk_data{monk_no};
     r_s_mat = r_s{monk_no};
-    r_sc_mat = zeros(size(r_s_mat, 1));
-    for neuron_1 = 1:size(r_s_mat, 1)-1
-        for neuron_2 = neuron_1+1:size(r_s_mat, 1)
-            firing_rate_mat = zeros(12*200, 2);
-            counter = 1;
-            for orientation_no = 1:12
-                for trial_no = 1:200
-                    counts = data(orientation_no).trial(trial_no).counts;
-                    firing_rate_mat(counter, 1) = sum(counts(neuron_1, :));
-                    firing_rate_mat(counter, 2) = sum(counts(neuron_2, :));
-                    counter = counter+1;
-                end
+    firing_rate_mat = zeros(2400, size(r_s_mat, 1));
+    for neuron_no = 1:size(r_s_mat, 1)
+        counter = 1;
+        firing_rate_mat_tmp = zeros(2400, 1);
+        for orientation_no = 1:12
+            for trial_no = 1:200
+                counts = data(orientation_no).trial(trial_no).counts;
+                firing_rate_mat_tmp(counter, 1) = sum(counts(neuron_no, :));
+                counter = counter+1;
             end
-            firing_rate_mat = zscore(firing_rate_mat);
-            tmp = corrcoef(firing_rate_mat);
-            r_sc_mat(neuron_1, neuron_2) = tmp(1, 2);
         end
+        firing_rate_mat(:, neuron_no) = zscore(firing_rate_mat_tmp);
     end
+    r_sc_mat = corrcoef(firing_rate_mat);
     r_sc{monk_no} = r_sc_mat;
 end
 %% calculating distance between neurons
@@ -267,8 +262,8 @@ for monk_no = 1:3
     distance_mat = zeros(size(data(1).trial(1).spikes, 1));
     for neuron_1 = 1:size(data(1).trial(1).spikes, 1)-1
         for neuron_2 = neuron_1+1:size(data(1).trial(1).spikes, 1)
-            elec_1 = channels(neuron_1);
-            elec_2 = channels(neuron_2);
+            elec_1 = channels(neurons_info(neuron_1));
+            elec_2 = channels(neurons_info(neuron_2));
             [row1, col1] = find(loc_map==elec_1);
             [row2, col2] = find(loc_map==elec_2);
             dx = distance_2_units*abs(row1-row2);
@@ -280,6 +275,159 @@ for monk_no = 1:3
     elec_distances{monk_no} = distance_mat;
 end
 %% plotting r_sc vs elec_distances
+clc
+close all
+for monk_no = 1:3
+    
+    r_s_mat = r_s{monk_no};
+    r_sc_mat = r_sc{monk_no};
+    distance_mat = elec_distances{monk_no};
+    r_sc_vec = [];
+    r_s_vec = [];
+    distace_vec = [];
+    for neuron_1 = 1:size(r_s_mat, 1)-1
+        for neuron_2 = neuron_1+1:size(r_s_mat, 1)
+            r_s_vec = [r_s_vec, r_s_mat(neuron_1, neuron_2)];
+            r_sc_vec = [r_sc_vec, r_sc_mat(neuron_1, neuron_2)];
+            distace_vec = [distace_vec, distance_mat(neuron_1, neuron_2)];
+        end
+    end
 
+    [distace_vec_sorted, I] = sort(distace_vec);
+    r_s_vec_sorted = r_s_vec(I);
+    r_sc_vec_sorted = r_sc_vec(I);
+
+    plot_all = zeros(4, 8, 3);
+
+    counter = 1;
+    for distance_value = 0.25e-3:0.5e-3:4.25e-3
+        [~, col] = find(distace_vec_sorted>=distance_value-0.26e-3 & distace_vec_sorted<distance_value+0.26e-3);
+        distance_tmp = distace_vec_sorted(col);
+        r_s_tmp = r_s_vec_sorted(col);
+        r_sc_tmp = r_sc_vec_sorted(col);
+
+        [~, col_2] = find(r_s_tmp>=0.5);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(1,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        [~, col_2] = find(r_s_tmp>=0 & r_s_tmp<0.5);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(2,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        [~, col_2] = find(r_s_tmp>=-0.5 & r_s_tmp<0);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(3,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+        
+        [~, col_2] = find(r_s_tmp<-0.5);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(4,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        counter = counter+1;
+    end
+
+    figure
+    hold on
+    for i = 1:4
+        plot(1000*plot_all(i,:,1), plot_all(i,:,2), 'color', [0,0,0]+i/8, 'LineWidth', 5-i)
+    end
+    for i = 1:4
+        errorbar(1000*plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
+    end
+    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5')
+    xlim([0, 4.5])
+    title("Mokey No."+num2str(monk_no))
+    xlabel("Distance between electrodes (mm)")
+    ylabel("Spike count correlation (r_{sc})")
+end
+%% plotting r_sc vs r_s
+clc
+close all
+for monk_no = 1:3
+    
+    r_s_mat = r_s{monk_no};
+    r_sc_mat = r_sc{monk_no};
+    distance_mat = elec_distances{monk_no};
+    r_sc_vec = [];
+    r_s_vec = [];
+    distace_vec = [];
+    for neuron_1 = 1:size(r_s_mat, 1)-1
+        for neuron_2 = neuron_1+1:size(r_s_mat, 1)
+            r_s_vec = [r_s_vec, r_s_mat(neuron_1, neuron_2)];
+            r_sc_vec = [r_sc_vec, r_sc_mat(neuron_1, neuron_2)];
+            distace_vec = [distace_vec, distance_mat(neuron_1, neuron_2)];
+        end
+    end
+
+    [distace_vec_sorted, I] = sort(distace_vec);
+    r_s_vec_sorted = r_s_vec(I);
+    r_sc_vec_sorted = r_sc_vec(I);
+
+    plot_all = zeros(4, 8, 3);
+
+    counter = 1;
+    for r_s_value = -0.75:0.25:0.75
+        [~, col] = find(r_s_vec_sorted>=r_s_value-0.26 & r_s_vec_sorted<r_s_value+0.26);
+        r_s_tmp = r_s_vec_sorted(col);
+        distance_tmp = distace_vec_sorted(col);
+        r_sc_tmp = r_sc_vec_sorted(col);
+
+        [~, col_2] = find(distance_tmp>=3);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        r_s_tmp2 = r_s_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(1,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        [~, col_2] = find(r_s_tmp>=0 & r_s_tmp<0.5);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(2,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        [~, col_2] = find(r_s_tmp>=-0.5 & r_s_tmp<0);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(3,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+        
+        [~, col_2] = find(r_s_tmp<-0.5);
+        r_sc_tmp2 = r_sc_tmp(col_2);
+        distance_tmp2 = mean(distance_tmp(col_2));
+        r_sc_mean = mean(r_sc_tmp2);
+        r_sc_var = var(r_sc_tmp2);
+        plot_all(4,counter,:) = [distance_tmp2, r_sc_mean, r_sc_var];
+
+        counter = counter+1;
+    end
+
+    figure
+    hold on
+    for i = 1:4
+        plot(1000*plot_all(i,:,1), plot_all(i,:,2), 'color', [0,0,0]+i/8, 'LineWidth', 5-i)
+    end
+    for i = 1:4
+        errorbar(1000*plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
+    end
+    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5')
+    xlim([0, 4.5])
+    title("Mokey No."+num2str(monk_no))
+    xlabel("Distance between electrodes (mm)")
+    ylabel("Spike count correlation (r_{sc})")
+end
 
 
