@@ -418,8 +418,7 @@ for monk_no = 1:3
     xlim([0, 4.5])
     title("Mokey No."+num2str(monk_no))
     xlabel("Distance between electrodes (mm)")
-    ylabel("Spike count correlation (r_{sc})")
-    
+    ylabel("Spike count correlation (r_{sc})")    
     if save_figures
         set(gcf,'PaperPositionMode','auto')
         print("Report/images/Q03_1_"+num2str(monk_no)+"_"+num2str(shuffle_bool),'-dpng','-r0')
