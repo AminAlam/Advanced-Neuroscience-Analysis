@@ -1,6 +1,10 @@
 clc
 clear
 close all
+save_figures = 1;
+
+% shuffling boolian
+shuffle_bool = 0;
 
 for monk_no = 1:3
     data = load("data/spikes_gratings/S_monkey"+num2str(monk_no)+".mat");
@@ -83,6 +87,11 @@ for grating_no = 1:12
     xlabel('Time (ms)')
     ylabel('Firing Rate (Hz)')
     title("PSTH Plot for orientation = "+num2str((grating_no-1)*30))
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/psth_"+num2str(grating_no),'-dpng','-r0')
+    end
 end
 
 %% plotting tuning curve
@@ -128,6 +137,11 @@ for monk_no = 1:3
         "Neuron No."+num2str(neurons_info(neurons(2))), ...
         "Avg")
     title("Tuning Curves for Monk No."+num2str(monk_no))
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/TC_"+num2str(monk_no),'-dpng','-r0')
+    end
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% part 2
@@ -170,33 +184,82 @@ for monk_no = 1:3
     end
     preferred_grating{monk_no} = grating_map;
 end
-%% plotting preferred graiting for neurons
+%% plotting preferred orientation for neurons  - 0 to 330
 clc
 close all
 for monk_no = 1:3
     figure
     plot_mat = preferred_grating{monk_no};
     plt = imagesc(plot_mat);
-    title("Similar Preferred Orientations | Monk"+num2str(monk_no))
+    title("Similar Preferred Orientations | Monkey No."+num2str(monk_no))
     caxis([0, 330])
     colorbar
     set(plt,'AlphaData',~isnan(plot_mat))
     colormap jet
     
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/PO_1_"+num2str(monk_no),'-dpng','-r0')
+    end
+    
     figure
     plot_mat = preferred_grating{monk_no};
-    plot_mat(find(isnan(plot_mat))) = -30;
+    plot_mat(isnan(plot_mat)) = 0;
     plt = pcolor(1:10, 1:10, plot_mat);
-    title("Similar Preferred Orientations | Monk"+num2str(monk_no))
+    title("Similar Preferred Orientations | Monkey No."+num2str(monk_no))
     caxis([0, 330])
     colorbar
     shading interp
     axis ij
-%     set(plt,'AlphaData',~isnan(plot_mat))
     colormap jet
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/PO_2_"+num2str(monk_no),'-dpng','-r0')
+    end
+end
+%% plotting preferred orientation for neurons - 0 to 150
+clc
+close all
+for monk_no = 1:3
+    figure
+    plot_mat = preferred_grating{monk_no};
+    for i = 1:size(plot_mat, 1)
+        for j = 1:size(plot_mat, 2)
+            if plot_mat(i, j)>150
+                plot_mat(i, j) = plot_mat(i, j) - 180;
+            end
+        end
+    end 
+    plt = imagesc(plot_mat);
+    title("Similar Preferred Orientations | Monkey No."+num2str(monk_no))
+    caxis([0, 150])
+    colorbar
+    set(plt,'AlphaData',~isnan(plot_mat))
+    colormap jet
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/PO_2_1_"+num2str(monk_no),'-dpng','-r0')
+    end
+    
+    figure
+    plot_mat(isnan(plot_mat)) = 0;
+    plt = pcolor(1:10, 1:10, plot_mat);
+    title("Similar Preferred Orientations | Monkey No."+num2str(monk_no))
+    caxis([0, 150])
+    colorbar
+    shading interp
+    axis ij
+    colormap jet
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/PO_2_2_"+num2str(monk_no),'-dpng','-r0')
+    end
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% part 3
-% finding dependence of r_sc on sitance
+% finding dependence of r_sc on distance
 
 % calculating tuning curves
 clc
@@ -241,6 +304,11 @@ for monk_no = 1:3
         counter = 1;
         firing_rate_mat_tmp = zeros(2400, 1);
         for orientation_no = 1:12
+            if shuffle_bool
+                suffled_trials = randperm(200);
+                data(orientation_no).trial= data(orientation_no).trial(suffled_trials);
+            end
+            
             for trial_no = 1:200
                 counts = data(orientation_no).trial(trial_no).counts;
                 firing_rate_mat_tmp(counter, 1) = sum(counts(neuron_no, :));
@@ -346,11 +414,16 @@ for monk_no = 1:3
     for i = 1:4
         errorbar(1000*plot_all(i,:,1), plot_all(i,:,2), plot_all(i,:,3), 'color', [0,0,0]+i/8)
     end
-    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5','NumColumns',2)
+    legend('r_s > 0.5', 'r_s 0 to 0.5', 'r_s -0.5 to 0', 'r_s < -0.5','NumColumns',1)
     xlim([0, 4.5])
     title("Mokey No."+num2str(monk_no))
     xlabel("Distance between electrodes (mm)")
     ylabel("Spike count correlation (r_{sc})")
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/Q03_1_"+num2str(monk_no)+"_"+num2str(shuffle_bool),'-dpng','-r0')
+    end
 end
 %% plotting r_sc vs r_s
 clc
@@ -431,6 +504,11 @@ for monk_no = 1:3
     title("Mokey No."+num2str(monk_no))
     xlabel("Orientation tuning similarity (r_s)")
     ylabel("Spike count correlation (r_{sc})")
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/Q03_2_"+num2str(monk_no)+"_"+num2str(shuffle_bool),'-dpng','-r0')
+    end
 end
 
 %% plotting r_sc vs r_s vs elec_distances
@@ -483,4 +561,9 @@ for monk_no = 1:3
     title("Mokey No."+num2str(monk_no))
     xlabel("Distance between electrodes (mm)")
     ylabel("Orientation tuning similarity (r_s)")
+    
+    if save_figures
+        set(gcf,'PaperPositionMode','auto')
+        print("Report/images/Q03_3_"+num2str(monk_no)+"_"+num2str(shuffle_bool),'-dpng','-r0')
+    end
 end
