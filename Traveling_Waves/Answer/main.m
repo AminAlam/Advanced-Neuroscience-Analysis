@@ -92,7 +92,7 @@ for ch_no = 1:num_channels
     end
     f = (-n/2:n/2-1)*(fs/n);
     Ps = 10*log10(Ps.^2/n);
-    Ps_plot = removePinkNoise(Ps, f, n);
+    Ps_plot = removePinkNoise(Ps, f, n, 1);
     plot(f(n/2+2:end), Ps_plot(n/2+2:end)-normalize_constant)
     [row, ~] = find(Ps_plot(n/2+2:end) == max(Ps_plot(n/2+2:end)));
     f_tmp = f(n/2+2:end);
@@ -136,7 +136,7 @@ stft_map_tmp = [];
 for t = 1:size(stft_map, 2)
     Ps = stft_map(:, t);
     n = length(Ps);
-    Ps_plot = removePinkNoise(Ps, f', n);
+    Ps_plot = removePinkNoise(Ps, f', n, 1);
     stft_map_tmp(:, t) = Ps_plot;
 end
 
@@ -161,8 +161,7 @@ title("STFT - Denoised (no Pink noise)")
 xlabel('Time (s)')
 ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power (dB)')
-%% Welch Method
-clc
+% Welch Method
 window_length = 80;
 num_overlap_samples = 60;
 pxx_mean = 0;
@@ -176,7 +175,7 @@ for ch_no = 1:num_channels
         pxx_mean = pxx_mean+pxx;
     end
 end
-%%
+
 pxx_clean = [];
 for t = 1:size(pxx_mean, 2)
     Ps = pxx_mean(:, t);
@@ -206,51 +205,30 @@ ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power')
 caxis([-0.05, 0.1])
 ylim([0, 40])
-%% Welch Method
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Phase propagation (Traveling waves)
+% part a - Bandpass Filter over dominant frequency
 clc
-window_length = 80;
-num_overlap_samples = 60;
-pxx_mean = 0;
+close all
+dominant_freq = 12.5;
+[b, a] = butter(2, [dominant_freq-0.5 dominant_freq+0.5] / (fs * 0.5), 'bandpass');
+freqz(b,a,fs,fs)
+ax = findall(gcf, 'Type', 'axes');
+set(ax, 'XLim', [10 20]);
+xline(ax(1), dominant_freq, '--k');
+xline(ax(2), dominant_freq, '--k');
+title('Frequency Response of the Filter')
 for ch_no = 1:num_channels
     lfp_data = chan(ch_no).lfp;
     lfp_data = zscore(lfp_data);
-    for trial_no = 1:num_trials
-        trial_data = lfp_data(:, trial_no);
-        tmp = buffer(trial_data, window_length, num_overlap_samples);
-        [pxx,f] = pwelch(tmp, 40, 20, fs, fs);
-        pxx_mean = pxx_mean+pxx;
-    end
+    filtered_data = transpose(filtfilt(b, a, transpose(lfp_data)));
+    chan(ch_no).filtered_lfp = filtered_data;
 end
-%%
-pxx_clean = [];
-for t = 1:size(pxx_mean, 2)
-    Ps = pxx_mean(:, t);
-    n = length(Ps);
-    Ps_plot = removePinkNoise(Ps, f', n, 2);
-    pxx_clean(:, t) = Ps_plot;
+%% part b - calculating instantaneous pahse of filtered signals
+for ch_no = 1:num_channels
+    filtered_lfp_data = chan(ch_no).filtered_lfp;
+    instantaneous_phase = cos(angle(hilbert(filtered_lfp_data)));
+    chan(ch_no).phase = instantaneous_phase;
 end
-
-figure
-imagesc(linspace(-1.2, 2, size(tmp, 2)),f, pxx_mean/(num_channels*num_trials))
-c_bar = colorbar;
-set(gca,'YDir','normal')
-title("Power Spectrum over Time - Welch")
-xlabel('Time (s)')
-ylabel('Frequency (Hz)')
-ylabel(c_bar,'Power')
-% caxis([-0.05, 0.1])
-ylim([0, 40])
-
-figure
-imagesc(linspace(-1.2, 2, size(tmp, 2)),f, pxx_clean/(num_channels*num_trials))
-c_bar = colorbar;
-set(gca,'YDir','normal')
-title("Power Spectrum over Time - Welch - Denoised (no Pink noise)")
-xlabel('Time (s)')
-ylabel('Frequency (Hz)')
-ylabel(c_bar,'Power')
-% caxis([-0.05, 0.1])
-ylim([0, 40])
 %% Functions
 
 function Ps_plot = removePinkNoise(Ps, f, n, bool)
