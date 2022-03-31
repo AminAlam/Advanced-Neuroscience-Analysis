@@ -229,6 +229,90 @@ for ch_no = 1:num_channels
     instantaneous_phase = cos(angle(hilbert(filtered_lfp_data)));
     chan(ch_no).phase = instantaneous_phase;
 end
+%% part c - showing the traveling wave
+clc
+close all
+
+times_plot = 1/fs:1/fs:3.2+1/fs;
+times_plot = floor(times_plot*fs);
+
+% making the mat to be shown in the demo
+angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
+data_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
+time_counter = 1;
+for t = times_plot
+    for i = 1:size(ChannelPosition, 1)
+        for j = 1:size(ChannelPosition, 2)
+            ch_no = ChannelPosition(i, j);
+            if ~isnan(ch_no)
+                angle_2_show = chan(ch_no).phase(:, trial_no);
+                angle_2_show = angle_2_show(t);
+                angle_mat_2_show(i, j, time_counter) = angle_2_show;
+                
+                data_2_show = chan(ch_no).filtered_lfp(:, trial_no);
+                data_2_show = data_2_show(t);
+                data_mat_2_show(i, j, time_counter) = angle_2_show;
+            end
+        end
+    end
+    time_counter = time_counter+1;
+end
+
+focus_chs = [11, 16, 21, 26, 31, 36];
+
+% showing the demo
+time_counter = 100;
+for t = times_plot(time_counter:end-time_counter)
+    time_2_plot = t/fs-1/fs-1.2;
+    subplot(2,1,1)
+    indexes = time_counter-50:time_counter+50;
+    times_2_plot = indexes/fs-1/fs-1.2;
+    for ch_no = 1:48
+        [row, col] = find(ChannelPosition==ch_no);
+        frame_data_2_plot = angle_mat_2_show(row, col, indexes);
+        frame_data_2_plot = reshape(frame_data_2_plot, [], length(indexes));
+        plot_color = [0.9 0.9 0];
+        plot_line_width = 1;
+        plot(times_2_plot, frame_data_2_plot, 'color', plot_color, 'LineWidth', plot_line_width)
+        hold on
+    end
+    
+    ch_counter = 1;
+    for ch_no = focus_chs
+        [row, col] = find(ChannelPosition==ch_no);
+        frame_data_2_plot = angle_mat_2_show(row, col, indexes);
+        frame_data_2_plot = reshape(frame_data_2_plot, [], length(indexes));
+        plot_color = [0.8, 0.8, 0.8]*1/ch_counter;
+        plot_line_width = 2;
+        ch_counter = ch_counter+1;
+        plot(times_2_plot, frame_data_2_plot, 'color', plot_color, 'LineWidth', plot_line_width)
+    end
+            
+    xline(time_2_plot, '--r');
+    hold off
+    ylim([-1.5 , 1.5])
+    xlim([times_2_plot(1), times_2_plot(end)])
+    xlabel('Time (s)')
+    
+    
+    subplot(2,1,2)
+    frame_angle_2_plot = angle_mat_2_show(:, :, time_counter);
+    img = imagesc(frame_angle_2_plot);
+    hold on
+    
+    ch_counter = 1;
+    for ch_no = focus_chs
+        [row, col] = find(ChannelPosition==ch_no);
+        plot_color = [0.8, 0.8, 0.8]*1/ch_counter;
+        ch_counter = ch_counter+1;
+        scatter(col, row, 40, plot_color, 'filled')
+    end
+    title("Time = "+num2str(time_2_plot))
+    hold off
+    pause(0.2)
+    
+    time_counter = time_counter+1;
+end
 %% Functions
 
 function Ps_plot = removePinkNoise(Ps, f, n, bool)
