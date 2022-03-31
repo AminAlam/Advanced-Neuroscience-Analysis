@@ -232,7 +232,6 @@ end
 %% part c - showing the traveling wave
 clc
 close all
-
 times_plot = 1/fs:1/fs:3.2+1/fs;
 times_plot = floor(times_plot*fs);
 
@@ -261,28 +260,29 @@ end
 focus_chs = [11, 16, 21, 26, 31, 36];
 
 % showing the demo
-time_counter = 100;
+time_counter = 101;
 for t = times_plot(time_counter:end-time_counter)
     time_2_plot = t/fs-1/fs-1.2;
-    subplot(2,1,1)
-    indexes = time_counter-50:time_counter+50;
+    subplot(2,2,[1, 2])
+    indexes = time_counter-100:time_counter+100;
     times_2_plot = indexes/fs-1/fs-1.2;
     for ch_no = 1:48
         [row, col] = find(ChannelPosition==ch_no);
         frame_data_2_plot = angle_mat_2_show(row, col, indexes);
         frame_data_2_plot = reshape(frame_data_2_plot, [], length(indexes));
-        plot_color = [0.9 0.9 0];
+        plot_color = [0.9 0.9 0.9];
         plot_line_width = 1;
         plot(times_2_plot, frame_data_2_plot, 'color', plot_color, 'LineWidth', plot_line_width)
         hold on
     end
     
     ch_counter = 1;
+    plot_color = [0, 0, 0];
     for ch_no = focus_chs
         [row, col] = find(ChannelPosition==ch_no);
         frame_data_2_plot = angle_mat_2_show(row, col, indexes);
         frame_data_2_plot = reshape(frame_data_2_plot, [], length(indexes));
-        plot_color = [0.8, 0.8, 0.8]*1/ch_counter;
+        plot_color = plot_color + 0.1;
         plot_line_width = 2;
         ch_counter = ch_counter+1;
         plot(times_2_plot, frame_data_2_plot, 'color', plot_color, 'LineWidth', plot_line_width)
@@ -295,22 +295,45 @@ for t = times_plot(time_counter:end-time_counter)
     xlabel('Time (s)')
     
     
-    subplot(2,1,2)
+    subplot(2,2,3)
     frame_angle_2_plot = angle_mat_2_show(:, :, time_counter);
     img = imagesc(frame_angle_2_plot);
+    colormap hot
+    set(img,'AlphaData', ~isnan(frame_angle_2_plot))
     hold on
     
     ch_counter = 1;
+    plot_color = [0, 0, 0];
     for ch_no = focus_chs
         [row, col] = find(ChannelPosition==ch_no);
-        plot_color = [0.8, 0.8, 0.8]*1/ch_counter;
+        plot_color = plot_color + 0.1;
         ch_counter = ch_counter+1;
-        scatter(col, row, 40, plot_color, 'filled')
+        scatter(col, row, 80, plot_color, 'filled')
     end
     title("Time = "+num2str(time_2_plot))
     hold off
-    pause(0.2)
     
+    
+    subplot(2,2,4)
+    [u,v] = gradient(frame_angle_2_plot,1,1);       % calculate gradient (dx and dy)
+    [y,x] = ndgrid(1:5,1:10);        % x,y grid
+    quiver(x,y,u,v)
+    hold on
+    ch_counter = 1;
+    plot_color = [0, 0, 0];
+    for ch_no = focus_chs
+        [row, col] = find(ChannelPosition==ch_no);
+        plot_color = plot_color + 0.1;
+        ch_counter = ch_counter+1;
+        scatter(col, row, 80, plot_color, 'filled')
+    end
+    ylim([0.5, 5.5])
+    xlim([0.5, 10.5])
+    hold off
+    
+    axis ij
+    
+    pause(0.2)
     time_counter = time_counter+1;
 end
 %% Functions
