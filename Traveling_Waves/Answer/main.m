@@ -4,7 +4,7 @@ close all
 load("data/ArrayData.mat")
 load("data/CleanTrials.mat")
 fs = 200;
-
+save_figures = 1;
 num_channels = numel(chan);
 % removing bad trials
 for ch_no = 1:num_channels
@@ -26,7 +26,7 @@ for ch_no = 1:num_channels
         Ps = Ps+abs(Y);
     end
 end
-normalize_constant = 10*log10((num_channels*num_trials)^2);
+normalize_constant = 10*log10((num_channels*num_trials)^2/n);
 
 f = (-n/2:n/2-1)*(fs/n);
 Ps_plot = 10*log10(Ps.^2/n);
@@ -45,31 +45,44 @@ xlim([1, 100])
 legend('Estimated Pink Noise')
 grid on
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/a_1",'-dpng','-r0')
+end
+
 figure
-plot(f(n/2+2:end), pink_spectrum-normalize_constant, '--r', 'LineWidth', 2)
+plot(f(n/2+2:end), pink_spectrum, '--r', 'LineWidth', 2)
 hold on
 plot(f(n/2+2:end), Ps_plot(n/2+2:end)-normalize_constant, 'k', 'LineWidth', 2)
-title('Averaged power spectrum of all trials of all channels')
+title('Averaged power spectrum of all trials of all channels (normalized)')
 xlabel('Frequency (Hz)')
 ylabel('Power (dB)')
 xlim([1, 100])
 legend('Estimated Pink Noise')
 grid on
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/a_2",'-dpng','-r0')
+end
+
 % removing pink noise
 figure
 hold on
 spectrum_clean = Ps_plot(n/2+2:end) - pink_spectrum;
-plot(f(n/2+2:end), Ps_plot(n/2+2:end)-normalize_constant, 'r', 'LineWidth', 2) 
-
-plot(f(n/2+2:end), spectrum_clean-normalize_constant, 'k', 'LineWidth', 2) 
-
+plot(f(n/2+2:end), Ps_plot(n/2+2:end)- normalize_constant, 'r', 'LineWidth', 2) 
+plot(f(n/2+2:end), spectrum_clean - normalize_constant, 'k', 'LineWidth', 2) 
 legend('Original', 'Denoised (No Pink Noise)')
-title('Averaged power spectrum of all trials of all channels')
+title('Averaged power spectrum of all trials of all channels (normalized)')
 xlabel('Frequency (Hz)')
 ylabel('Power (dB)')
 xlim([1, 70])
 grid on
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/a_3",'-dpng','-r0')
+end
 %% part b - clustering electrodes based on their dominant oscillation frequency
 clc
 close all
@@ -108,6 +121,11 @@ xlim([0, 70])
 ylim([-35, 10])
 grid on
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/b_1",'-dpng','-r0')
+end
+
 figure
 plt = imagesc(dominant_freq_mat);
 set(plt,'AlphaData', ~isnan(dominant_freq_mat))
@@ -128,6 +146,11 @@ textColors = repmat(dominant_freq_mat(:) > midValue, 1, 3);  % Choose white or b
                                                %   they can be easily seen over
                                                %   the background color
 set(hStrings, {'Color'}, num2cell(textColors, 2));
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/b_2",'-dpng','-r0')
+end
 %% part c - time-frequncy analysis of the LFP data
 clc
 close all
@@ -163,6 +186,11 @@ xlabel('Time (s)')
 ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power (dB)')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/c_1",'-dpng','-r0')
+end
+
 figure
 imagesc(time_stft-1.2,f(n/2+2:end),stft_map_tmp(n/2+2:end, :)/(num_channels*num_trials));
 ylim([2, 40])
@@ -173,6 +201,11 @@ title("STFT - Denoised (no Pink noise)")
 xlabel('Time (s)')
 ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power (dB)')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/c_2",'-dpng','-r0')
+end
 
 % Welch Method
 window_length = 80;
@@ -208,6 +241,11 @@ ylabel(c_bar,'Power')
 caxis([-0.05, 0.1])
 ylim([0, 40])
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/c_3",'-dpng','-r0')
+end
+
 figure
 imagesc(linspace(-1.2, 2, size(tmp, 2)),f, pxx_clean/(num_channels*num_trials))
 c_bar = colorbar;
@@ -218,6 +256,11 @@ ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power')
 caxis([-0.05, 0.1])
 ylim([0, 40])
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/c_4",'-dpng','-r0')
+end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Phase propagation (Traveling waves)
 % part a - Bandpass Filter over dominant frequency
 clc
@@ -247,7 +290,9 @@ clc
 close all
 times_plot = 1/fs:1/fs:3.2+1/fs;
 times_plot = floor(times_plot*fs);
-trial_no = 100;
+trial_no = 259;
+
+video_boolian = 1;
 
 % making the mat to be shown in the demo
 angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
@@ -274,7 +319,12 @@ end
 focus_chs = [11, 16, 21, 26, 31, 36];
 
 % showing the demo
-figure('units','normalized','outerposition',[0 0 1 1])
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+if video_boolian
+    writerObj = VideoWriter("videos/Demo_Trial"+num2str(trial_no));
+    writerObj.FrameRate = 25;
+    open(writerObj);
+end
 time_counter = 101;
 for t = times_plot(time_counter:end-time_counter)
     time_2_plot = t/fs-1/fs-1.2;
@@ -358,9 +408,19 @@ for t = times_plot(time_counter:end-time_counter)
     legend('Gradient Vectors', 'Avg Gradient Vector')
     
     axis ij
-    
-    pause(0.1)
+
     time_counter = time_counter+1;
+    if video_boolian
+        frame = getframe(fig);
+        for frame_index = 1:4
+            writeVideo(writerObj,frame);
+        end
+    else
+        pause(0.1)
+    end
+end
+if video_boolian
+    close(writerObj)
 end
 
 %% calculating pgd for all trials
@@ -429,6 +489,11 @@ trial_no = 1:490;
 % histogram(pdg_mat(trail_no, 242:end),'Normalization', 'pdf')
 % 
 % legend('All Times', 'Before Onset', 'After Onset')
+
+% finding the trial with maximum average PGD
+pgd_mat_meanOverT = mean(pdg_mat(:, 241:end), 2);
+find(pgd_mat_meanOverT==max(pgd_mat_meanOverT))
+
 
 figure
 histogram(gradient_direction_mat_mean(trial_no,1:241),'Normalization', 'pdf')
