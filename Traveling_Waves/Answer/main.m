@@ -116,6 +116,18 @@ c_bar = colorbar;
 caxis([0, 13])
 title('Dominant Frequencies')
 ylabel(c_bar,'Frequency (Hz)')
+
+textStrings = num2str(dominant_freq_mat(:), '%0.2f');       % Create strings from the matrix values
+textStrings = strtrim(cellstr(textStrings));  % Remove any space padding
+[x, y] = meshgrid(1:10, 1:5);  % Create x and y coordinates for the strings
+hStrings = text(x(:), y(:), textStrings(:), ...  % Plot the strings
+                'HorizontalAlignment', 'center');
+midValue = mean(get(gca, 'CLim'));  % Get the middle value of the color range
+textColors = repmat(dominant_freq_mat(:) > midValue, 1, 3);  % Choose white or black for the
+                                               %   text color of the strings so
+                                               %   they can be easily seen over
+                                               %   the background color
+set(hStrings, {'Color'}, num2cell(textColors, 2));
 %% part c - time-frequncy analysis of the LFP data
 clc
 close all
@@ -161,6 +173,7 @@ title("STFT - Denoised (no Pink noise)")
 xlabel('Time (s)')
 ylabel('Frequency (Hz)')
 ylabel(c_bar,'Power (dB)')
+
 % Welch Method
 window_length = 80;
 num_overlap_samples = 60;
@@ -210,7 +223,7 @@ ylim([0, 40])
 clc
 close all
 dominant_freq = 12.5;
-[b, a] = butter(2, [dominant_freq-0.5 dominant_freq+0.5] / (fs * 0.5), 'bandpass');
+[b, a] = butter(2, [dominant_freq-1 dominant_freq+1] / (fs * 0.5), 'bandpass');
 freqz(b,a,fs,fs)
 ax = findall(gcf, 'Type', 'axes');
 set(ax, 'XLim', [10 20]);
@@ -234,6 +247,7 @@ clc
 close all
 times_plot = 1/fs:1/fs:3.2+1/fs;
 times_plot = floor(times_plot*fs);
+trial_no = 100;
 
 % making the mat to be shown in the demo
 angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
@@ -260,6 +274,7 @@ end
 focus_chs = [11, 16, 21, 26, 31, 36];
 
 % showing the demo
+figure('units','normalized','outerposition',[0 0 1 1])
 time_counter = 101;
 for t = times_plot(time_counter:end-time_counter)
     time_2_plot = t/fs-1/fs-1.2;
@@ -287,7 +302,7 @@ for t = times_plot(time_counter:end-time_counter)
         ch_counter = ch_counter+1;
         plot(times_2_plot, frame_data_2_plot, 'color', plot_color, 'LineWidth', plot_line_width)
     end
-            
+    title("Trial No."+num2str(trial_no))
     xline(time_2_plot, '--r');
     hold off
     ylim([-1.5 , 1.5])
@@ -301,7 +316,6 @@ for t = times_plot(time_counter:end-time_counter)
     colormap hot
     set(img,'AlphaData', ~isnan(frame_angle_2_plot))
     hold on
-    
     ch_counter = 1;
     plot_color = [0, 0, 0];
     for ch_no = focus_chs
@@ -311,14 +325,21 @@ for t = times_plot(time_counter:end-time_counter)
         scatter(col, row, 80, plot_color, 'filled')
     end
     title("Time = "+num2str(time_2_plot))
-    hold off
-    
+    hold off    
+    colorbar
+    caxis([-1, 1])
     
     subplot(2,2,4)
     [u,v] = gradient(frame_angle_2_plot,1,1);       % calculate gradient (dx and dy)
     [y,x] = ndgrid(1:5,1:10);        % x,y grid
     quiver(x,y,u,v)
     hold on
+    
+    u_mean = 10*nanmean(u, 'all');
+    v_mean = 10*nanmean(v, 'all');
+    
+    plot([5, 5+u_mean], [3, 3+v_mean], 'k->', 'LineWidth', 2)
+    
     ch_counter = 1;
     plot_color = [0, 0, 0];
     for ch_no = focus_chs
@@ -327,16 +348,170 @@ for t = times_plot(time_counter:end-time_counter)
         ch_counter = ch_counter+1;
         scatter(col, row, 80, plot_color, 'filled')
     end
+    
     ylim([0.5, 5.5])
     xlim([0.5, 10.5])
     hold off
+    pgd = pgdCalculator(u, v);
+    speed = speedCalculator(u, v, 1/fs);
+    title("PGD = "+num2str(pgd)+" | Speed = "+num2str(speed))
+    legend('Gradient Vectors', 'Avg Gradient Vector')
     
     axis ij
     
-    pause(0.2)
+    pause(0.1)
     time_counter = time_counter+1;
 end
+
+%% calculating pgd for all trials
+
+clc
+close all
+times_plot = 1/fs:1/fs:3.2+1/fs;
+times_plot = floor(times_plot*fs);
+trial_no = 100;
+
+angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
+data_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
+pdg_mat = zeros(trial_no, length(times_plot));
+speed_mat = zeros(trial_no, length(times_plot));
+gradient_direction_mat_mean = zeros(trial_no, length(times_plot));
+gradient_direction_mat_all = zeros(trial_no, length(times_plot), 5, 5);
+
+for trial_no = 1:size(chan(1).lfp, 2)
+    time_counter = 1;
+    for t = times_plot
+        for i = 1:size(ChannelPosition, 1)
+            for j = 1:size(ChannelPosition, 2)
+                ch_no = ChannelPosition(i, j);
+                if ~isnan(ch_no)
+                    angle_2_show = chan(ch_no).phase(:, trial_no);
+                    angle_2_show = angle_2_show(t);
+                    angle_mat_2_show(i, j, time_counter) = angle_2_show;
+
+                    data_2_show = chan(ch_no).filtered_lfp(:, trial_no);
+                    data_2_show = data_2_show(t);
+                    data_mat_2_show(i, j, time_counter) = angle_2_show;
+                end
+            end
+        end
+        [u,v] = gradient(data_mat_2_show(:,:,time_counter),1,1);
+        pdg_mat(trial_no, time_counter) = pgdCalculator(u, v);
+        speed_mat(trial_no, time_counter) = speedCalculator(u, v, 1/fs);
+        for row_grad = 1:size(u, 1)
+            for col_grad = 1:size(u, 2)
+                a = [u(row_grad, col_grad), v(row_grad, col_grad), 0];
+                b = [1, 0, 0];
+                ThetaInDegrees = atan2(norm(cross(a,b)),dot(a,b))*180/pi;
+                gradient_direction_mat_all(trial_no, time_counter, row_grad, col_grad) = ThetaInDegrees;
+            end
+        end
+        a = [nanmean(u, 'all'), nanmean(v, 'all'), 0];
+        b = [1, 0, 0];
+        thetaInDegrees = atan2(norm(cross(a,b)),dot(a,b))*180/pi;
+        gradient_direction_mat_mean(trial_no, time_counter) = thetaInDegrees;
+        time_counter = time_counter+1;
+    end
+end
+%% plotting hitogram of PGDs and gradient directions
+trial_no = 1:490;
+% plot(times_plot/fs-1.2-1/fs, mean(pdg_mat(trial_no, :), 1))
+% hold on
+% plot(times_plot/fs-1.2-1/fs, movmean(mean(pdg_mat(trial_no, :), 1), 100))
+% xlim([-1.2, 2])
+% xline(0, '--r');
+% 
+% trail_no = 1:100;
+% figure
+% histogram(pdg_mat(trail_no,:),'Normalization', 'pdf')
+% hold on
+% histogram(pdg_mat(trail_no, 1:241),'Normalization', 'pdf')
+% histogram(pdg_mat(trail_no, 242:end),'Normalization', 'pdf')
+% 
+% legend('All Times', 'Before Onset', 'After Onset')
+
+figure
+histogram(gradient_direction_mat_mean(trial_no,1:241),'Normalization', 'pdf')
+hold on
+histogram(gradient_direction_mat_mean(trial_no,241:end),'Normalization', 'pdf')
+title('PDF of Direction of Wave Propagation')
+legend('Before Onset', 'After Onset')
+xlabel('Propagation Direction (degree)')
+
+figure
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(trail_no, 1:241, :, :);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
+histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
+hold on
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(trail_no, 241:end, : ,:);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
+histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
+title('PDF of Direction of Gradient of all channels')
+legend('Before Onset', 'After Onset')
+xlabel('Gradient Direction (degree)')
+
+figure
+histogram(speed_mat(trial_no,1:241),'Normalization', 'pdf')
+hold on
+histogram(speed_mat(trial_no,241:end),'Normalization', 'pdf')
+title('PDF of Speed of Wave Propagation')
+legend('Before Onset', 'After Onset')
+xlabel('Speed (cm/s)')
+xlim([0, 200])
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 2D Fourier method
+clc
+close all
+
+times_plot = 1/fs+51/fs:1/fs:3.2+1/fs-51/fs;
+times_plot = floor(times_plot*fs);
+
+ch_list = [2, 6, 11, 16, 21, 26, 31, 36, 41, 46];
+
+stacked_mat = zeros(length(ch_list), size(chan(1).lfp, 1), size(chan(1).lfp, 2)) ;
+
+ch_counter = 1;
+for ch_no = ch_list
+    stacked_mat(ch_counter, :, :) = chan(ch_no).filtered_lfp;
+    ch_counter = ch_counter+1;
+end
+
+max_values = [];
+for t = times_plot
+    max_values_tmp = [];
+    for trial_no = 1:size(chan(1).filtered_lfp, 2)
+        fft_stacked_mat(:, :, trial_no) = fft2(stacked_mat(:, t-50:t+50, trial_no));
+    
+
+        freqs_x = (-1*L/2+1:L/2)/L*fs;
+        [~, col] = find(abs(freqs_x-dominant_freq) == min(abs(freqs_x-dominant_freq)));
+        fft_stacked_mat = mean(abs(fft_stacked_mat), 3);
+        fft_slice = fft_stacked_mat(:, col);
+        L = size(fft_stacked_mat, 2);
+    %     imagesc(freqs_x, 1:10, fftshift(fft_stacked_mat))
+    %     xlim([-20, 20])
+        max_values_tmp = [max_values_tmp, max(fft_slice)];
+    end
+    max_values = [max_values; max_values_tmp]; 
+end
+%%
+% plot(max_values)
+
 %% Functions
+
+function pgd = pgdCalculator(fx, fy)
+    num = norm(nanmean(fx, 'all'), nanmean(fy, 'all'));
+    den = nanmean(sqrt(fx.^2+fy.^2), 'all');
+    % pgd = sqrt(nansum(fx))^2 +  nansum(nansum(fy))^2)/nansum(nansum((sqrt(fx.^2 + fy.^2))));
+    pgd = num/den;
+end
+
+
+function speed = speedCalculator(fx, fy, dt)
+    num = norm(nanmean(fx/dt, 'all'), nanmean(fy/dt, 'all'));
+    den = nanmean(sqrt(fx.^2+fy.^2), 'all');
+    speed = num/den;
+
+end
 
 function Ps_plot = removePinkNoise(Ps, f, n, bool)
     if bool==1
