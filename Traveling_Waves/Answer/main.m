@@ -4,7 +4,7 @@ close all
 load("data/ArrayData.mat")
 load("data/CleanTrials.mat")
 fs = 200;
-save_figures = 1;
+save_figures = 0;
 num_channels = numel(chan);
 % removing bad trials
 for ch_no = 1:num_channels
@@ -77,6 +77,7 @@ title('Averaged power spectrum of all trials of all channels (normalized)')
 xlabel('Frequency (Hz)')
 ylabel('Power (dB)')
 xlim([1, 70])
+ylim([-10, 40])
 grid on
 
 if save_figures
@@ -135,16 +136,13 @@ caxis([0, 13])
 title('Dominant Frequencies')
 ylabel(c_bar,'Frequency (Hz)')
 
-textStrings = num2str(dominant_freq_mat(:), '%0.2f');       % Create strings from the matrix values
-textStrings = strtrim(cellstr(textStrings));  % Remove any space padding
-[x, y] = meshgrid(1:10, 1:5);  % Create x and y coordinates for the strings
-hStrings = text(x(:), y(:), textStrings(:), ...  % Plot the strings
+textStrings = num2str(dominant_freq_mat(:), '%0.2f');
+textStrings = strtrim(cellstr(textStrings));  
+[x, y] = meshgrid(1:10, 1:5);  
+hStrings = text(x(:), y(:), textStrings(:), ...  
                 'HorizontalAlignment', 'center');
-midValue = mean(get(gca, 'CLim'));  % Get the middle value of the color range
-textColors = repmat(dominant_freq_mat(:) > midValue, 1, 3);  % Choose white or black for the
-                                               %   text color of the strings so
-                                               %   they can be easily seen over
-                                               %   the background color
+midValue = mean(get(gca, 'CLim'));  
+textColors = repmat(dominant_freq_mat(:) > midValue, 1, 3);  
 set(hStrings, {'Color'}, num2cell(textColors, 2));
 
 if save_figures
@@ -326,6 +324,8 @@ if video_boolian
     open(writerObj);
 end
 time_counter = 101;
+u_0 = 0;
+v_0 = 0;
 for t = times_plot(time_counter:end-time_counter)
     time_2_plot = t/fs-1/fs-1.2;
     subplot(2,2,[1, 2])
@@ -403,7 +403,9 @@ for t = times_plot(time_counter:end-time_counter)
     xlim([0.5, 10.5])
     hold off
     pgd = pgdCalculator(u, v);
-    speed = speedCalculator(u, v, 1/fs);
+    speed = speedCalculator(u, v, u_0, v_0, 1/fs);
+    u_0 = u;
+    v_0 = v;
     title("PGD = "+num2str(pgd)+" | Speed = "+num2str(speed))
     legend('Gradient Vectors', 'Avg Gradient Vector')
     
@@ -429,7 +431,6 @@ clc
 close all
 times_plot = 1/fs:1/fs:3.2+1/fs;
 times_plot = floor(times_plot*fs);
-trial_no = 100;
 
 angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
 data_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
@@ -440,6 +441,8 @@ gradient_direction_mat_all = zeros(trial_no, length(times_plot), 5, 5);
 
 for trial_no = 1:size(chan(1).lfp, 2)
     time_counter = 1;
+    u_0 = 0;
+    v_0 = 0;
     for t = times_plot
         for i = 1:size(ChannelPosition, 1)
             for j = 1:size(ChannelPosition, 2)
@@ -457,7 +460,9 @@ for trial_no = 1:size(chan(1).lfp, 2)
         end
         [u,v] = gradient(data_mat_2_show(:,:,time_counter),1,1);
         pdg_mat(trial_no, time_counter) = pgdCalculator(u, v);
-        speed_mat(trial_no, time_counter) = speedCalculator(u, v, 1/fs);
+        speed_mat(trial_no, time_counter) = speedCalculator(u, v, u_0, v_0, 1/fs);
+        u_0 = u;
+        v_0 = v;
         for row_grad = 1:size(u, 1)
             for col_grad = 1:size(u, 2)
                 a = [u(row_grad, col_grad), v(row_grad, col_grad), 0];
@@ -504,11 +509,11 @@ legend('Before Onset', 'After Onset')
 xlabel('Propagation Direction (degree)')
 
 figure
-gradient_direction_mat_all_tmp = gradient_direction_mat_all(trail_no, 1:241, :, :);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(trial_no, 1:241, :, :);
 gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
 histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
 hold on
-gradient_direction_mat_all_tmp = gradient_direction_mat_all(trail_no, 241:end, : ,:);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(trial_no, 241:end, : ,:);
 gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
 histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
 title('PDF of Direction of Gradient of all channels')
@@ -571,9 +576,11 @@ function pgd = pgdCalculator(fx, fy)
 end
 
 
-function speed = speedCalculator(fx, fy, dt)
-    num = norm(nanmean(fx/dt, 'all'), nanmean(fy/dt, 'all'));
-    den = nanmean(sqrt(fx.^2+fy.^2), 'all');
+function speed = speedCalculator(fx2, fy2, fx1, fy1, dt)
+    d_fx = (fx2 - fx1)/dt;
+    d_fy = (fy2 - fy1)/dt;
+    num = norm(nanmean(d_fx, 'all'), nanmean(d_fy, 'all'));
+    den = nanmean(sqrt(fx2.^2+fy2.^2), 'all');
     speed = num/den;
 
 end
