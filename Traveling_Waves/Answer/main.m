@@ -216,7 +216,7 @@ for ch_no = 1:num_channels
         trial_data = lfp_data(:, trial_no);
         tmp = buffer(trial_data, window_length, num_overlap_samples);
         [pxx,f] = pwelch(tmp, 40, 20, fs, fs);
-        pxx_mean = pxx_mean+pxx;
+        pxx_mean = pxx_mean + pxx;
     end
 end
 
@@ -258,6 +258,36 @@ ylim([0, 40])
 if save_figures
     set(gcf,'PaperPositionMode','auto')
     print("Report/images/c_4",'-dpng','-r0')
+end
+
+%% Wavelet
+
+wt_map = 0;
+for ch_no = 1:num_channels
+    lfp_data = chan(ch_no).lfp;
+    lfp_data = zscore(lfp_data);
+    for trial_no = 1:num_trials
+        trial_data = lfp_data(:, trial_no);
+        [wt,f,coi] = cwt(trial_data,fs);
+        wt_map = wt_map + abs(wt);
+    end
+end
+
+figure
+surface(Time, f, wt_map/(num_channels*num_trials));
+axis tight
+shading flat
+c_bar = colorbar;
+ylim([1.2, 40])
+set(gca,'YDir','normal')
+title("Power Spectrum over Time - Wavelet")
+xlabel('Time (s)')
+ylabel('Frequency (Hz)')
+ylabel(c_bar,'Power (dB)')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/c_5",'-dpng','-r0')
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Phase propagation (Traveling waves)
 % part a - Bandpass Filter over dominant frequency
