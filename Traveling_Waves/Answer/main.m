@@ -173,7 +173,7 @@ for t = 1:size(stft_map, 2)
     stft_map_tmp(:, t) = Ps_plot;
 end
 
-figure 
+figure
 imagesc(time_stft-1.2,f,stft_map/(num_channels*num_trials));
 ylim([0, 40])
 c_bar = colorbar;
