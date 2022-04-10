@@ -4,7 +4,7 @@ close all
 load("data/ArrayData.mat")
 load("data/CleanTrials.mat")
 fs = 200;
-save_figures = 0;
+save_figures = 1;
 num_channels = numel(chan);
 % removing bad trials
 for ch_no = 1:num_channels
@@ -307,6 +307,11 @@ for ch_no = 1:num_channels
     filtered_data = transpose(filtfilt(b, a, transpose(lfp_data)));
     chan(ch_no).filtered_lfp = filtered_data;
 end
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_a",'-dpng','-r0')
+end
 %% part b - calculating instantaneous pahse of filtered signals
 for ch_no = 1:num_channels
     filtered_lfp_data = chan(ch_no).filtered_lfp;
@@ -354,8 +359,7 @@ if video_boolian
     open(writerObj);
 end
 time_counter = 101;
-u_0 = 0;
-v_0 = 0;
+phi_0 = 0;
 for t = times_plot(time_counter:end-time_counter)
     time_2_plot = t/fs-1/fs-1.2;
     subplot(2,2,[1, 2])
@@ -433,7 +437,9 @@ for t = times_plot(time_counter:end-time_counter)
     xlim([0.5, 10.5])
     hold off
     pgd = pgdCalculator(u, v);
-    speed = speedCalculator(u, v, u_0, v_0, 1/fs);
+    d_phi = frame_angle_2_plot - phi_0;
+    speed = speedCalculator(u, v, d_phi, 1/fs);
+    phi_0 = frame_angle_2_plot;
     u_0 = u;
     v_0 = v;
     title("PGD = "+num2str(pgd)+" | Speed = "+num2str(speed))
@@ -455,13 +461,13 @@ if video_boolian
     close(writerObj)
 end
 
-%% calculating pgd for all trials
+%% calculating parameters for all trials
 
 clc
 close all
 times_plot = 1/fs:1/fs:3.2+1/fs;
 times_plot = floor(times_plot*fs);
-
+trial_no = 490;
 angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
 data_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
 pdg_mat = zeros(trial_no, length(times_plot));
@@ -471,8 +477,7 @@ gradient_direction_mat_all = zeros(trial_no, length(times_plot), 5, 5);
 
 for trial_no = 1:size(chan(1).lfp, 2)
     time_counter = 1;
-    u_0 = 0;
-    v_0 = 0;
+    phi_0 = 0;
     for t = times_plot
         for i = 1:size(ChannelPosition, 1)
             for j = 1:size(ChannelPosition, 2)
@@ -488,11 +493,13 @@ for trial_no = 1:size(chan(1).lfp, 2)
                 end
             end
         end
-        [u,v] = gradient(data_mat_2_show(:,:,time_counter),1,1);
+        [u, v] = gradient(data_mat_2_show(:,:,time_counter),1,1);
+        u = u/400e-6;
+        v = v/400e-6;
         pdg_mat(trial_no, time_counter) = pgdCalculator(u, v);
-        speed_mat(trial_no, time_counter) = speedCalculator(u, v, u_0, v_0, 1/fs);
-        u_0 = u;
-        v_0 = v;
+        d_phi = data_mat_2_show(:,:,time_counter) - phi_0;
+        speed_mat(trial_no, time_counter) = speedCalculator(u, v, d_phi, 1/fs);
+        phi_0 = data_mat_2_show(:,:,time_counter);
         for row_grad = 1:size(u, 1)
             for col_grad = 1:size(u, 2)
                 a = [u(row_grad, col_grad), v(row_grad, col_grad), 0];
@@ -525,39 +532,104 @@ trial_no = 1:490;
 % 
 % legend('All Times', 'Before Onset', 'After Onset')
 
-% finding the trial with maximum average PGD
-pgd_mat_meanOverT = mean(pdg_mat(:, 241:end), 2);
-find(pgd_mat_meanOverT==max(pgd_mat_meanOverT))
-
 
 figure
-histogram(gradient_direction_mat_mean(trial_no,1:241),'Normalization', 'pdf')
+histogram(gradient_direction_mat_mean(:,1:241),'Normalization', 'pdf')
 hold on
-histogram(gradient_direction_mat_mean(trial_no,241:end),'Normalization', 'pdf')
+histogram(gradient_direction_mat_mean(:,241:end),'Normalization', 'pdf')
 title('PDF of Direction of Wave Propagation')
 legend('Before Onset', 'After Onset')
 xlabel('Propagation Direction (degree)')
+ylabel('Probability Density')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_e_1",'-dpng','-r0')
+end
 
 figure
-gradient_direction_mat_all_tmp = gradient_direction_mat_all(trial_no, 1:241, :, :);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(:, 1:241, :, :);
 gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
 histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
 hold on
-gradient_direction_mat_all_tmp = gradient_direction_mat_all(trial_no, 241:end, : ,:);
+gradient_direction_mat_all_tmp = gradient_direction_mat_all(:, 241:end, : ,:);
 gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
 histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
 title('PDF of Direction of Gradient of all channels')
 legend('Before Onset', 'After Onset')
 xlabel('Gradient Direction (degree)')
+ylabel('Probability Density')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_e_2",'-dpng','-r0')
+end
 
 figure
-histogram(speed_mat(trial_no,1:241),'Normalization', 'pdf')
+histogram(speed_mat(:,1:241)*100,'Normalization', 'pdf')
 hold on
-histogram(speed_mat(trial_no,241:end),'Normalization', 'pdf')
+histogram(speed_mat(:,241:end)*100,'Normalization', 'pdf')
 title('PDF of Speed of Wave Propagation')
 legend('Before Onset', 'After Onset')
 xlabel('Speed (cm/s)')
-xlim([0, 200])
+ylabel('Probability Density')
+xlim([0, 50])
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_e_3",'-dpng','-r0')
+end
+%% repeating last part just for times with pdg > 0.5
+
+[rows, cols] = find(pdg_mat<=0.5);
+
+gradient_direction_mat_mean_backup = gradient_direction_mat_mean;
+gradient_direction_mat_all_backup = gradient_direction_mat_all;
+speed_mat_backup = speed_mat;
+
+for i = 1:length(rows)
+    row = rows(i);
+    col = cols(i);
+    gradient_direction_mat_mean_backup(row,col) = nan;
+    gradient_direction_mat_all_backup(row,col, :, :) = nan;
+    speed_mat_backup(row,col) = nan;
+end
+
+figure
+histogram(gradient_direction_mat_mean_backup,'Normalization', 'pdf')
+title('PDF of Direction of Wave Propagation')
+xlabel('Propagation Direction (degree)')
+ylabel('Probability Density')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_2_e_1",'-dpng','-r0')
+end
+
+figure
+gradient_direction_mat_all_tmp = gradient_direction_mat_all_backup;
+gradient_direction_mat_all_tmp = gradient_direction_mat_all_tmp(~isnan(gradient_direction_mat_all_tmp));
+histogram(gradient_direction_mat_all_tmp,'Normalization', 'pdf')
+title('PDF of Direction of Gradient of all channels')
+xlabel('Gradient Direction (degree)')
+ylabel('Probability Density')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_2_e_2",'-dpng','-r0')
+end
+
+figure
+histogram(speed_mat_backup*100,'Normalization', 'pdf')
+title('PDF of Speed of Wave Propagation')
+xlabel('Speed (cm/s)')
+ylabel('Probability Density')
+xlim([0, 50])
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/2_2_e_3",'-dpng','-r0')
+end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 2D Fourier method
 clc
 close all
@@ -601,18 +673,13 @@ end
 function pgd = pgdCalculator(fx, fy)
     num = norm(nanmean(fx, 'all'), nanmean(fy, 'all'));
     den = nanmean(sqrt(fx.^2+fy.^2), 'all');
-    % pgd = sqrt(nansum(fx))^2 +  nansum(nansum(fy))^2)/nansum(nansum((sqrt(fx.^2 + fy.^2))));
     pgd = num/den;
 end
 
-
-function speed = speedCalculator(fx2, fy2, fx1, fy1, dt)
-    d_fx = (fx2 - fx1)/dt;
-    d_fy = (fy2 - fy1)/dt;
-    num = norm(nanmean(d_fx, 'all'), nanmean(d_fy, 'all'));
-    den = nanmean(sqrt(fx2.^2+fy2.^2), 'all');
+function speed = speedCalculator(fx, fy, dphi, dt)
+    num = abs(nanmean(dphi/dt, 'all'));
+    den = nanmean(sqrt(fx.^2+fy.^2), 'all');
     speed = num/den;
-
 end
 
 function Ps_plot = removePinkNoise(Ps, f, n, bool)
