@@ -4,7 +4,7 @@ close all
 load("data/ArrayData.mat")
 load("data/CleanTrials.mat")
 fs = 200;
-save_figures = 1;
+save_figures = 0;
 num_channels = numel(chan);
 % removing bad trials
 for ch_no = 1:num_channels
@@ -315,8 +315,10 @@ end
 %% part b - calculating instantaneous pahse of filtered signals
 for ch_no = 1:num_channels
     filtered_lfp_data = chan(ch_no).filtered_lfp;
-    instantaneous_phase = cos(angle(hilbert(filtered_lfp_data)));
+    instantaneous_phase = angle(hilbert(filtered_lfp_data));
+    instantaneous_cos_phase = cos(angle(hilbert(filtered_lfp_data)));
     chan(ch_no).phase = instantaneous_phase;
+    chan(ch_no).cos_phase = instantaneous_cos_phase;
 end
 %% part c - showing the traveling wave
 clc
@@ -329,6 +331,7 @@ video_boolian = 1;
 
 % making the mat to be shown in the demo
 angle_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
+angle_cos_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
 data_mat_2_show = zeros(size(ChannelPosition, 1), size(ChannelPosition, 2), length(times_plot))*nan;
 time_counter = 1;
 for t = times_plot
@@ -336,9 +339,13 @@ for t = times_plot
         for j = 1:size(ChannelPosition, 2)
             ch_no = ChannelPosition(i, j);
             if ~isnan(ch_no)
-                angle_2_show = chan(ch_no).phase(:, trial_no);
+                angle_2_show = chan(ch_no).cos_phase(:, trial_no);
                 angle_2_show = angle_2_show(time_counter);
                 angle_mat_2_show(i, j, time_counter) = angle_2_show;
+                
+                angle_cos_2_show = chan(ch_no).cos_phase(:, trial_no);
+                angle_cos_2_show = angle_cos_2_show(time_counter);
+                angle_cos_mat_2_show(i, j, time_counter) = angle_cos_2_show;
                 
                 data_2_show = chan(ch_no).filtered_lfp(:, trial_no);
                 data_2_show = data_2_show(time_counter);
@@ -587,7 +594,7 @@ ylabel('Probability Density')
 
 if save_figures
     set(gcf,'PaperPositionMode','auto')
-    print("Report/images/2_2_e_1",'-dpng','-r0')
+    print("Report/images/3_2_e_1",'-dpng','-r0')
 end
 
 figure
@@ -600,7 +607,7 @@ ylabel('Probability Density')
 
 if save_figures
     set(gcf,'PaperPositionMode','auto')
-    print("Report/images/2_2_e_2",'-dpng','-r0')
+    print("Report/images/3_2_e_2",'-dpng','-r0')
 end
 
 figure
@@ -612,7 +619,7 @@ xlim([0, 50])
 
 if save_figures
     set(gcf,'PaperPositionMode','auto')
-    print("Report/images/2_2_e_3",'-dpng','-r0')
+    print("Report/images/3_2_e_3",'-dpng','-r0')
 end
 
 %% part f - validating the observations
