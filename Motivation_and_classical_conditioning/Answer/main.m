@@ -98,7 +98,7 @@ patch(box,boxy,'b','FaceAlpha',0.1)
 xl = xline(100, 'b', 'Training');
 xl.LabelVerticalAlignment = 'middle';
 
-legend('\omega_1', '\omega_2')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 %% inhibitory
 clc
 close all
@@ -123,7 +123,7 @@ plot(1:num_trials, w(2,:), 'b', 'LineWidth', 2)
 xlabel('Trial Number')
 ylabel('w')
 title('Inhibitory')
-legend('\omega_1', '\omega_2')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 %% overshadow
 clc
 close all
@@ -150,7 +150,7 @@ plot(1:num_trials, w(2,:), 'b', 'LineWidth', 2)
 xlabel('Trial Number')
 ylabel('\omega')
 title('Overshadow | \alpha_1 = 0.5 , \alpha_2 = 0.5')
-legend('\omega_1', '\omega_2')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 ylim([0, 1])
 
 figure
@@ -175,7 +175,7 @@ plot(1:num_trials, w(2,:), 'b', 'LineWidth', 2)
 xlabel('Trial Number')
 ylabel('\omega')
 title('Overshadow | \alpha_1 = 0.9 , \alpha_2 = 0.4')
-legend('\omega_1', '\omega_2')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 ylim([0, 1])
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Kalman Filter
@@ -213,8 +213,9 @@ plot(y_value_5/2+5, linspace(0, 2, length(y_value_5)), 'k')
 xline(5, '--k');
 plot(y_value_18/2+18, linspace(0, 2, length(y_value_18)), 'k')
 xline(18, '--k');
-legend('\omega_1', '\omega_2')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 
+% blocking
 figure
 num_trials = 20;
 u = ones(2, num_trials);
@@ -222,19 +223,19 @@ r = ones(1, num_trials);
 u(2, 1:end/2) = 0;
 w0 = [0;0];
 tau = 0.5;
-cov0 = eye(2)*0.6;
-[w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, num_trials);
-
+cov0 = [0.6 0;0, 0.6];
+noise_p = [0.01 0.01; 0.01, 0.01];
+[w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+subplot(2,1,1)
 plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
 hold on
 plot(1:num_trials, w(2,:), '--k', 'LineWidth', 2)
 xlabel('Trial Number')
 ylabel('\omega')
-legend('\omega_1', '\omega_2')
-title('Blocking')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+title('Blocking - mean')
 
-figure
-
+subplot(2,1,2)
 plot(1:num_trials, squeeze(cov_mat(1,1,:)), 'k', 'LineWidth', 2)
 hold on
 plot(floor(num_trials/2)+1:num_trials, squeeze(cov_mat(2,2,floor(num_trials/2)+1:end)), '--k', 'LineWidth', 2)
@@ -242,8 +243,86 @@ xline(floor(num_trials/2)+1, '--k');
 ylim([0, 1]);
 xlim([1, num_trials])
 xlabel('Trial Number')
-ylabel('\sigma^2')
-legend('\sigma_1^2', '\sigma_2^2')
-title('Blocking')
+ylabel('$\sigma^2$', 'interpreter','LaTex')
+legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
+title('Blocking - variance')
+
+
+
+% unblocking
+figure
+num_trials = 20;
+u = ones(2, num_trials);
+r = ones(1, num_trials);
+r(end/2+1:end) = 2;
+u(2, 1:end/2) = 0;
+w0 = [0;0];
+tau = 0.5;
+cov0 = [0.6 0; 0, 0.6];
+noise_p = [0.01 0.01; 0.01, 0.01];
+[w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+subplot(2,1,1)
+plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
+hold on
+plot(1:num_trials, w(2,:), '--k', 'LineWidth', 2)
+xlabel('Trial Number')
+ylabel('\omega')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+title('unBlocking - mean')
+
+subplot(2,1,2)
+plot(1:num_trials, squeeze(cov_mat(1,1,:)), 'k', 'LineWidth', 2)
+hold on
+plot(floor(num_trials/2)+1:num_trials, squeeze(cov_mat(2,2,floor(num_trials/2)+1:end)), '--k', 'LineWidth', 2)
+xline(floor(num_trials/2)+1, '--k');
+ylim([0, 1]);
+xlim([1, num_trials])
+xlabel('Trial Number')
+ylabel('$\sigma^2$', 'interpreter','LaTex')
+legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
+title('unBlocking - variance')
+
+
+% backward blocking
+figure
+num_trials = 20;
+u = ones(2, num_trials);
+r = ones(1, num_trials);
+u(2, end/2+1:end) = 0;
+w0 = [0;0];
+tau = 0.5;
+cov0 = [0.6 0;0, 0.6];
+noise_p = [0.01 0.01; 0.01, 0.01];
+[w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+subplot(2,1,1)
+plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
+hold on
+plot(1:num_trials, w(2,:), '--k', 'LineWidth', 2)
+xlabel('Trial Number')
+ylabel('\omega')
+legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+title('Backward Blocking - mean')
+
+subplot(2,1,2)
+plot(1:num_trials, squeeze(cov_mat(1,1,:)), 'k', 'LineWidth', 2)
+hold on
+plot(floor(num_trials/2)+1:num_trials, squeeze(cov_mat(2,2,floor(num_trials/2)+1:end)), '--k', 'LineWidth', 2)
+xline(floor(num_trials/2)+1, '--k');
+ylim([0, 1]);
+xlim([1, num_trials])
+xlabel('Trial Number')
+ylabel('$\sigma^2$', 'interpreter','LaTex')
+legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
+title('Backward Blocking - variance')
+%% paper contour plots
+clc
+close all
+
+
+
+
+
+
+
 
 
