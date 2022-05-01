@@ -451,10 +451,11 @@ tau = 1;
 cov0 = [0.6 0;0, 0.6];
 noise_p = [0.01 0; 0, 0.01];
 [w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+
 subplot(2,1,1)
 plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
 xlabel('Trial Number')
-ylabel('\omega')
+ylabel('\omega', 'FontSize', 16)
 legend('$\omega_1$', 'interpreter','LaTex')
 title('mean')
 
@@ -464,6 +465,96 @@ xline(floor(num_trials/2)+1, '--k');
 ylim([0, 1]);
 xlim([1, num_trials])
 xlabel('Trial Number')
-ylabel('$\sigma^2$', 'interpreter','LaTex')
+ylabel('$\sigma^2$', 'interpreter','LaTex', 'FontSize', 16)
 legend('$\sigma_1^2$', 'interpreter','LaTex')
 title('variance')
+
+%% figure 3 of the paper
+clc
+clear
+close all
+
+
+figure
+num_trials = 100;
+u = ones(1, num_trials);
+v = normrnd(0,0.1,1,num_trials);
+v_r = normrnd(0,0.5,1,num_trials);
+c = zeros(1, num_trials);
+c(40) = 1;
+c(90) = 1;
+phi = normrnd(0,2,1,num_trials);
+phi(40) = -2;
+phi(90) = 6;
+
+w_real = zeros(1, num_trials);
+r = zeros(1, num_trials);
+
+for trial_no = 2:num_trials
+    w_real(:,trial_no) = w_real(:,trial_no-1) + v(:, trial_no-1) + c(:, trial_no-1)*phi(:, trial_no-1);
+    r(:,trial_no) = w_real(:,trial_no) + v_r(:,trial_no) + c(:,trial_no)*phi(:,trial_no);
+end
+
+
+w0 = 0;
+tau = 0.6;
+cov0 = 0.6;
+noise_p = 0.01;
+phi_noise = 20;
+gamma = 3.3;
+
+w = zeros(size(w0,1),num_trials);
+w(:,1) = w0;
+cov0 = eye(size(w0,1))*cov0;
+noise_p = eye(size(w0,1))*noise_p;
+cov_mat = zeros(size(w0,1), size(w0,1), num_trials);
+cov0 = eye(size(w0,1))*cov0;
+
+cov_mat(:,:, 1) = cov0;
+for trial_no = 2:num_trials
+    cov_mat_past = cov_mat(:,:,trial_no-1) + noise_p;
+    B = (r(trial_no-1) - w(:,trial_no-1)'*u(:, trial_no-1))^2/(u(:, trial_no-1)'*cov_mat_past*u(:, trial_no-1) + tau^2);
+    coeff = cov_mat_past*u(:, trial_no-1)/(u(:, trial_no-1)'*cov_mat_past*u(:, trial_no-1) + tau^2);
+    if B < gamma
+        c = 0;
+    else
+        c = 1;
+    end
+    
+    phi_noise_mat = c*ones(size(w0,1),1)*phi_noise;
+    
+    cov_mat(:,:,trial_no) = cov_mat_past - coeff*u(:,trial_no-1)'*cov_mat_past + phi_noise_mat;
+    w(:,trial_no) = w(:,trial_no-1) + coeff*(r(trial_no-1) - w(:,trial_no-1)' * u(:,trial_no-1));
+end
+
+scatter(1:num_trials, r, 'xk')
+hold on
+scatter(1:num_trials, w_real, '.k')
+scatter(0, 0, 400, 'k', 'LineWidth', 2)
+scatter(40, -2, 400, 'k', 'LineWidth', 2)
+scatter(90, 4, 400, 'k', 'LineWidth', 2)
+legend('$r(t)$', '$w(t)$', 'interpreter','LaTex', 'FontSize', 16,'Location','northwest')
+xlabel('Trial Number')
+ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
+title('mean')
+ylim([-4 5]) 
+
+figure
+scatter(1:num_trials, w, 'ok')
+hold on
+scatter(1:num_trials, r, 'xk')
+scatter(1:num_trials, w_real, '.k')
+legend('$\hat{w}(t)$', 'interpreter','LaTex', 'FontSize', 16,'Location','northwest')
+xlabel('Trial Number')
+ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
+title('mean')
+ylim([-4 5])
+
+
+
+
+
+
+
+
+
