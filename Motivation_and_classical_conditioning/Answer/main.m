@@ -314,6 +314,7 @@ xlabel('Trial Number')
 ylabel('$\sigma^2$', 'interpreter','LaTex')
 legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
 title('Backward Blocking - variance')
+
 %% paper contour plots
 clc
 clear
@@ -359,3 +360,110 @@ for t = [1, 9, 19]
     i = i +1;
 end
 
+%% effect of process noise and measurement noise
+clc
+clear
+close all
+
+taus = [0.2 , 0.5, 1];
+noise_p_coeef = [0.01, 0.1, 1];
+
+for k = 1:3
+ for kk = 1:3
+    tau = taus(1, k);
+    noise_p = eye(2)*noise_p_coeef(1, kk);
+        % backward blocking
+        figure
+        num_trials = 20;
+        u = ones(2, num_trials);
+        r = ones(1, num_trials);
+        u(2, end/2+1:end) = 0;
+        w0 = [0;0];
+        cov0 = [0.6 0;0, 0.6];
+        [w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+        subplot(2,1,1)
+        plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
+        hold on
+        plot(1:num_trials, w(2,:), '--k', 'LineWidth', 2)
+        xlabel('Trial Number')
+        ylabel('\omega')
+        legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+        title("Backward Blocking - mean - mNoise "+num2str(tau)+" | "+"Pnoise "+num2str(noise_p_coeef(1, kk)))
+
+        subplot(2,1,2)
+        plot(1:num_trials, squeeze(cov_mat(1,1,:)), 'k', 'LineWidth', 2)
+        hold on
+        plot(floor(num_trials/2)+1:num_trials, squeeze(cov_mat(2,2,floor(num_trials/2)+1:end)), '--k', 'LineWidth', 2)
+        xline(floor(num_trials/2)+1, '--k');
+        ylim([0, 1]);
+        xlim([1, num_trials])
+        xlabel('Trial Number')
+        ylabel('$\sigma^2$', 'interpreter','LaTex')
+        legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
+        title("Backward Blocking - variance - mNoise "+num2str(tau)+" | "+"Pnoise "+num2str(noise_p_coeef(1, kk)))
+
+        r_list = 0.5:0.2:3;
+        theta = 0:0.01:2*pi;
+        colors = linspace(1, 0, length(r_list));
+        i = 1;
+        for t = [1, 9, 19]
+            figure
+            set(gca,'Color','k')
+            hold on
+            cov_mat_c = cov_mat(:,:,t);
+            w_c = w(:, t);
+            j = length(r_list);
+            for r = flip(r_list)
+                x = sin(theta)*r;
+                y = cos(theta)*r;
+                tmp = cov_mat_c*[x;y];
+                x = w_c(1) + tmp(1, :);
+                y = w_c(2) + tmp(2, :);
+                fill(x, y, [1, 1, 1]*colors(j), 'LineStyle', 'none')
+                j = j-1;
+            end
+            scatter(w_c(1), w_c(2), '*k', 'LineWidth', 1)
+            generated_data = mvnrnd(w_c,cov_mat_c, 500);
+            scatter(generated_data(:,1), generated_data(:,2), '.b')
+            xlim([-1, 2])
+            ylim([-1, 2])
+            xlabel('$\overline {\omega_1}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
+            ylabel('$\overline {\omega_2}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
+            i = i +1;
+        end
+
+ end
+end
+
+%% first s1 -> 'r' then s1 -> '-r'
+clc
+clear
+close all
+
+figure
+num_trials = 20;
+u = ones(2, num_trials);
+u(2, :) = 0;
+r = ones(1, num_trials);
+r(end/2+1:end) = -1;
+w0 = [0;0];
+tau = 1;
+cov0 = [0.6 0;0, 0.6];
+noise_p = [0.01 0; 0, 0.01];
+[w, cov_mat] = kalamFilter(u, r, cov0, w0, tau, noise_p, num_trials);
+subplot(2,1,1)
+plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
+xlabel('Trial Number')
+ylabel('\omega')
+legend('$\omega_1$', 'interpreter','LaTex')
+title('mean')
+
+subplot(2,1,2)
+plot(1:num_trials, squeeze(cov_mat(1,1,:)), 'k', 'LineWidth', 2)
+xline(floor(num_trials/2)+1, '--k');
+ylim([0, 1]);
+xlim([1, num_trials])
+xlabel('Trial Number')
+ylabel('$\sigma^2$', 'interpreter','LaTex')
+legend('$\sigma_1^2$', 'interpreter','LaTex')
+title('variance')
