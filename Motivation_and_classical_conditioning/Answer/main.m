@@ -479,53 +479,31 @@ figure
 num_trials = 100;
 u = ones(1, num_trials);
 v = normrnd(0,0.1,1,num_trials);
-v_r = normrnd(0,0.5,1,num_trials);
+v_r = normrnd(0,0.2,1,num_trials);
 c = zeros(1, num_trials);
 c(40) = 1;
 c(90) = 1;
-phi = normrnd(0,2,1,num_trials);
+phi = zeros(1,num_trials);
 phi(40) = -2;
 phi(90) = 6;
 
 w_real = zeros(1, num_trials);
 r = zeros(1, num_trials);
-
+r(:,1) = w_real(:,1) + v_r(:,1) + c(:,1)*phi(:,1);
 for trial_no = 2:num_trials
     w_real(:,trial_no) = w_real(:,trial_no-1) + v(:, trial_no-1) + c(:, trial_no-1)*phi(:, trial_no-1);
     r(:,trial_no) = w_real(:,trial_no) + v_r(:,trial_no) + c(:,trial_no)*phi(:,trial_no);
 end
 
-
+% kalman predict w
 w0 = 0;
 tau = 0.6;
 cov0 = 0.6;
 noise_p = 0.01;
-phi_noise = 20;
+phi_noise = 100;
 gamma = 3.3;
 
-w = zeros(size(w0,1),num_trials);
-w(:,1) = w0;
-cov0 = eye(size(w0,1))*cov0;
-noise_p = eye(size(w0,1))*noise_p;
-cov_mat = zeros(size(w0,1), size(w0,1), num_trials);
-cov0 = eye(size(w0,1))*cov0;
-
-cov_mat(:,:, 1) = cov0;
-for trial_no = 2:num_trials
-    cov_mat_past = cov_mat(:,:,trial_no-1) + noise_p;
-    B = (r(trial_no-1) - w(:,trial_no-1)'*u(:, trial_no-1))^2/(u(:, trial_no-1)'*cov_mat_past*u(:, trial_no-1) + tau^2);
-    coeff = cov_mat_past*u(:, trial_no-1)/(u(:, trial_no-1)'*cov_mat_past*u(:, trial_no-1) + tau^2);
-    if B < gamma
-        c = 0;
-    else
-        c = 1;
-    end
-    
-    phi_noise_mat = c*ones(size(w0,1),1)*phi_noise;
-    
-    cov_mat(:,:,trial_no) = cov_mat_past - coeff*u(:,trial_no-1)'*cov_mat_past + phi_noise_mat;
-    w(:,trial_no) = w(:,trial_no-1) + coeff*(r(trial_no-1) - w(:,trial_no-1)' * u(:,trial_no-1));
-end
+[w, cov_mat, B] = kalamFilterInhanced(u, r, cov0, w0, tau, gamma, noise_p, phi_noise, num_trials);
 
 scatter(1:num_trials, r, 'xk')
 hold on
@@ -537,7 +515,7 @@ legend('$r(t)$', '$w(t)$', 'interpreter','LaTex', 'FontSize', 16,'Location','nor
 xlabel('Trial Number')
 ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
 title('mean')
-ylim([-4 5]) 
+ylim([-4 5])
 
 figure
 scatter(1:num_trials, w, 'ok')
@@ -550,11 +528,67 @@ ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
 title('mean')
 ylim([-4 5])
 
+figure
 
+plot(1:num_trials, squeeze(cov_mat(1,1,:)),'--k','LineWidth',1.5)
+hold on
+plot(1:num_trials, B, 'k','LineWidth',1.5)
+hold on
+yline(gamma,'-.k','LineWidth',1.5);
+ylim([0 10])
+legend("ACh","NE","$gamma$",'Interpreter','LaTex','location','northwest')
+xlabel("t")
 
+%% MSE
+clc
+clear
+close all
+gammas = 0:0.5:30;
+SSE_all = zeros(100, size(gammas, 2));
 
+num_trials = 100;
+u = ones(1, num_trials);
 
+w0 = 0;
+tau = 0.7;
+cov0 = 0.6;
+noise_p = 0.01;
+phi_noise = 100;
 
+for j = 1:100
+    
+    v = normrnd(0,0.1,1,num_trials);
+    v_r = normrnd(0,0.5,1,num_trials);
+    c = zeros(1, num_trials);
+    c(40) = 1;
+    c(90) = 1;
+    phi = zeros(1,num_trials);
+    phi(40) = -2;
+    phi(90) = 4;
 
+    w_real = zeros(1, num_trials);
+    r = zeros(1, num_trials);
+    r(:,1) = w_real(:,1) + v_r(:,1) + c(:,1)*phi(:,1);
+    for trial_no = 2:num_trials
+        w_real(:,trial_no) = w_real(:,trial_no-1) + v(:, trial_no-1) + c(:, trial_no-1)*phi(:, trial_no-1);
+        r(:,trial_no) = w_real(:,trial_no) + v_r(:,trial_no) + c(:,trial_no)*phi(:,trial_no);
+    end
 
+    i = 1;
+    MSEs = zeros(size(gammas));
+    for gamma = gammas
+        [w, cov_mat, B] = kalamFilterInhanced(u, r, cov0, w0, tau, gamma, noise_p, phi_noise, num_trials);
+        MSEs(i) = sse(w, w_real);
+        i = i + 1;
+    end
+    
+    SSE_all(j, :) = MSEs;
 
+end
+%%
+figure
+plot(gammas, mean(SSE_all, 1), 'k', 'LineWidth', 2)
+hold on
+errorbar(gammas, mean(SSE_all, 1), sqrt(var(SSE_all, 1, 1))/10, 'k')
+xlabel("$\gamma$",'interpreter','LaTex')
+ylabel("MSE")
