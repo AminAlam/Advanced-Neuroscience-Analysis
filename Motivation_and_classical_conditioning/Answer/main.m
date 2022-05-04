@@ -3,6 +3,7 @@
 clc
 clear
 close all
+save_figures = 1;
 
 figure
 num_trials = 200;
@@ -30,6 +31,11 @@ boxy = [1 0 0 1];
 patch(box,boxy,'b','FaceAlpha',0.1)
 xl = xline(100, 'b', 'Training');
 xl.LabelVerticalAlignment = 'middle';
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/extinction','-dpng','-r0')
+end
 %% partial
 clc
 close all
@@ -66,8 +72,13 @@ yline(0.7, '--m', 'LineWidth', 1);
 
 xlabel('Trial Number')
 ylabel('\omega')
-title('Extinction')
+title('Partial')
 legend('\alpha = 0.1', '\alpha = 0.4', '\alpha = 0.7')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/partial','-dpng','-r0')
+end
 %% blocking
 clc
 close all
@@ -99,6 +110,11 @@ xl = xline(100, 'b', 'Training');
 xl.LabelVerticalAlignment = 'middle';
 
 legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/blocking','-dpng','-r0')
+end
 %% inhibitory
 clc
 close all
@@ -124,6 +140,11 @@ xlabel('Trial Number')
 ylabel('w')
 title('Inhibitory')
 legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/inhibitory','-dpng','-r0')
+end
 %% overshadow
 clc
 close all
@@ -153,11 +174,16 @@ title('Overshadow | \alpha_1 = 0.5 , \alpha_2 = 0.5')
 legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 ylim([0, 1])
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/overshadow_1','-dpng','-r0')
+end
+
 figure
 num_trials = 200;
 espsilon = 5e-2;
 alpha1 = 0.9;
-alpha2 = 0.3;
+alpha2 = 0.1;
 u(1, :) = rand(1, num_trials) < alpha1;
 u(2, :) = rand(1, num_trials) < alpha2;
 r = zeros(1, num_trials);
@@ -174,10 +200,14 @@ hold on
 plot(1:num_trials, w(2,:), 'b', 'LineWidth', 2)
 xlabel('Trial Number')
 ylabel('\omega')
-title('Overshadow | \alpha_1 = 0.9 , \alpha_2 = 0.4')
+title('Overshadow | \alpha_1 = 0.9 , \alpha_2 = 0.1')
 legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 ylim([0, 1])
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/overshadow_2','-dpng','-r0')
+end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Kalman Filter
 clc
 clear
