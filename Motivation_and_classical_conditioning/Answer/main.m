@@ -210,7 +210,6 @@ if save_figures
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Kalman Filter
 clc
-clear
 close all
 
 % Figure 1.b of the paper
@@ -245,6 +244,12 @@ plot(y_value_18/2+18, linspace(0, 2, length(y_value_18)), 'k')
 xline(18, '--k');
 legend('$\omega_1$', '$\omega_2$', 'interpreter','LaTex')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/drift','-dpng','-r0')
+end
+
+
 % blocking
 figure
 num_trials = 20;
@@ -277,7 +282,10 @@ ylabel('$\sigma^2$', 'interpreter','LaTex')
 legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
 title('Blocking - variance')
 
-
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/blocking2','-dpng','-r0')
+end
 
 % unblocking
 figure
@@ -312,6 +320,10 @@ ylabel('$\sigma^2$', 'interpreter','LaTex')
 legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
 title('unBlocking - variance')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/unblocking','-dpng','-r0')
+end
 
 % backward blocking
 figure
@@ -345,9 +357,12 @@ ylabel('$\sigma^2$', 'interpreter','LaTex')
 legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
 title('Backward Blocking - variance')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/backward_blocking','-dpng','-r0')
+end
 %% paper contour plots
 clc
-clear
 close all
 % backward blocking
 num_trials = 20;
@@ -366,7 +381,6 @@ colors = linspace(1, 0, length(r_list));
 i = 1;
 for t = [1, 9, 19]
     figure
-    set(gca,'Color','k')
     hold on
     cov_mat_c = cov_mat(:,:,t);
     w_c = w(:, t);
@@ -388,6 +402,7 @@ for t = [1, 9, 19]
     xlabel('$\overline {\omega_1}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
     ylabel('$\overline {\omega_2}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
     i = i +1;
+    set(gca,'Color','k')
 end
 
 %% effect of process noise and measurement noise
