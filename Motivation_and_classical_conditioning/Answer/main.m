@@ -534,7 +534,6 @@ if save_figures
 end
 %% figure 3 of the paper
 clc
-clear
 close all
 
 
@@ -580,6 +579,11 @@ ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
 title('mean')
 ylim([-4 5])
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/part3_1','-dpng','-r0')
+end
+
 figure
 scatter(1:num_trials, w, 'ok')
 hold on
@@ -591,8 +595,12 @@ ylabel('$\omega$', 'interpreter','LaTex', 'FontSize', 16)
 title('mean')
 ylim([-4 5])
 
-figure
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/part3_2','-dpng','-r0')
+end
 
+figure
 plot(1:num_trials, squeeze(cov_mat(1,1,:)),'--k','LineWidth',1.5)
 hold on
 plot(1:num_trials, B, 'k','LineWidth',1.5)
@@ -602,9 +610,12 @@ ylim([0 10])
 legend("ACh","NE","$gamma$",'Interpreter','LaTex','location','northwest')
 xlabel("t")
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/part3_3','-dpng','-r0')
+end
 %% MSE
 clc
-clear
 close all
 gammas = 0:0.5:30;
 SSE_all = zeros(100, size(gammas, 2));
@@ -648,10 +659,15 @@ for j = 1:100
     SSE_all(j, :) = MSEs;
 
 end
-%%
+
 figure
 plot(gammas, mean(SSE_all, 1), 'k', 'LineWidth', 2)
 hold on
 errorbar(gammas, mean(SSE_all, 1), sqrt(var(SSE_all, 1, 1))/10, 'k')
 xlabel("$\gamma$",'interpreter','LaTex')
 ylabel("MSE")
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/part3_4','-dpng','-r0')
+end
