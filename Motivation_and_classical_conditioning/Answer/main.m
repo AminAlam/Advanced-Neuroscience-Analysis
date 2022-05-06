@@ -121,7 +121,6 @@ close all
 figure
 num_trials = 200;
 espsilon = 5e-2;
-alpha = 0.1;
 u = ones(2, num_trials);
 u(2, :) = rand(1, num_trials) < 0.5;
 r = zeros(1, num_trials);
@@ -223,6 +222,7 @@ w(:,1) = w0;
 for trial_no = 2:num_trials
     w(:, trial_no)  = w(:, trial_no-1) - v(:, trial_no-1);
 end
+
 t_5 = 5;
 hist_plot = histogram(w(:, 1:t_5), 'Normalization', 'pdf');
 y_value_5 = hist_plot.Values;
@@ -379,8 +379,10 @@ r_list = 0.5:0.2:3;
 theta = 0:0.01:2*pi;
 colors = linspace(1, 0, length(r_list));
 i = 1;
+
 for t = [1, 9, 19]
     figure
+    patch(box,boxy,'k','FaceAlpha',1)
     hold on
     cov_mat_c = cov_mat(:,:,t);
     w_c = w(:, t);
@@ -402,21 +404,20 @@ for t = [1, 9, 19]
     xlabel('$\overline {\omega_1}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
     ylabel('$\overline {\omega_2}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
     i = i +1;
-    set(gca,'Color','k')
+    box = [-1 -1 2 2];
+    boxy = [2 -1 -1 2];
 end
-
 %% effect of process noise and measurement noise
 clc
-clear
 close all
 
 taus = [0.2 , 0.5, 1];
 noise_p_coeef = [0.01, 0.1, 1];
 
 for k = 1:3
- for kk = 1:3
-    tau = taus(1, k);
-    noise_p = eye(2)*noise_p_coeef(1, kk);
+    for kk = 1:3
+        tau = taus(1, k);
+        noise_p = eye(2)*noise_p_coeef(1, kk);
         % backward blocking
         figure
         num_trials = 20;
@@ -447,13 +448,18 @@ for k = 1:3
         legend('$\sigma_1^2$', '$\sigma_2^2$', 'interpreter','LaTex')
         title("Backward Blocking - variance - mNoise "+num2str(tau)+" | "+"Pnoise "+num2str(noise_p_coeef(1, kk)))
 
+        if save_figures
+            set(gcf,'PaperPositionMode','auto')
+            print("Report/images/noise_effect"+num2str(k)+"_"+num2str(kk),'-dpng','-r0')
+        end
+
         r_list = 0.5:0.2:3;
         theta = 0:0.01:2*pi;
         colors = linspace(1, 0, length(r_list));
         i = 1;
         for t = [1, 9, 19]
             figure
-            set(gca,'Color','k')
+            patch(box,boxy,'k','FaceAlpha',1)
             hold on
             cov_mat_c = cov_mat(:,:,t);
             w_c = w(:, t);
@@ -475,14 +481,19 @@ for k = 1:3
             xlabel('$\overline {\omega_1}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
             ylabel('$\overline {\omega_2}$ ', 'interpreter' ,'LaTex', 'FontSize', 16)
             i = i +1;
+            if save_figures
+                set(gcf,'PaperPositionMode','auto')
+                print("Report/images/noise_effect"+num2str(t)+"_"+num2str(k)+"_"+num2str(kk),'-dpng','-r0')
+            end
         end
-
- end
+        disp("k "+num2str(k) + " | kk "+num2str(kk))
+        tau
+        noise_p_coeef(1, kk)
+    end
 end
 
 %% first s1 -> 'r' then s1 -> '-r'
 clc
-clear
 close all
 
 figure
@@ -499,6 +510,9 @@ noise_p = [0.01 0; 0, 0.01];
 
 subplot(2,1,1)
 plot(1:num_trials, w(1,:), 'k', 'LineWidth', 2)
+hold on
+xline(floor(num_trials/2)+1, '--k');
+xlim([1, num_trials])
 xlabel('Trial Number')
 ylabel('\omega', 'FontSize', 16)
 legend('$\omega_1$', 'interpreter','LaTex')
@@ -514,6 +528,10 @@ ylabel('$\sigma^2$', 'interpreter','LaTex', 'FontSize', 16)
 legend('$\sigma_1^2$', 'interpreter','LaTex')
 title('variance')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/pos_neg','-dpng','-r0')
+end
 %% figure 3 of the paper
 clc
 clear
