@@ -6,7 +6,9 @@ function states = reach_cat(states, increament_prob, direction_no, num_direction
         else
             coeff = 1/(num_directions-1);
         end
-        state(1, direction_no) = state(1, direction_no) + coeff*increament_prob;
+        coeff
+        state
+        state(1, i) = state(1, i) + coeff*increament_prob;
     end
     states(agent_loc_past(1,1), agent_loc_past(1,2)) = {state};
 end

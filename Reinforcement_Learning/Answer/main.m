@@ -20,7 +20,6 @@ direction_map{3} = [-1, 0]; % left
 direction_map{4} = [1, 0]; % right
 
 % initializing the movement direction probabilities for all the states
-
 for i = 1:map_size(1,1)
     for j = 1:map_size(1,2)
         states{i,j} = ones(1,4)*0.25;
@@ -33,10 +32,10 @@ for trial_no = 1:num_trials
     reach_cat_bool = 0;
     agent_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
     step_no = 1;
-    
+
     while ~reach_target_bool && ~reach_cat_bool
         agent_loc_past = agent_loc;
-        
+
         % deciding which direction to choose
         directions_probs = cell2mat(states(agent_loc(1,1), agent_loc(1,2)));
         if length(unique(directions_probs)) == 1
