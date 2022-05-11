@@ -8,18 +8,20 @@ cat_img = imread('assets/cat.png');
 target_img = imread('assets/target.png');
 
 % configs
-map_size = [15, 15];
+
+num_trials = 100;
+learning_rate = 0.05;
+
+map_size = [10, 10];
 cat_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
-cat_loc = [5, 8];
+cat_loc = [6, 8];
 target_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
-target_loc = [9, 11];
+target_loc = [5, 5];
 
 map_mat_main = zeros(map_size);
 map_mat_main(cat_loc(1,1), cat_loc(1,2)) = -1;
 map_mat_main(target_loc(1,1), target_loc(1,2)) = 1;
 
-num_trials = 100;
-learning_rate = 0.01;
 num_directions = 4;
 
 direction_map{1} = [0, 1]; % up
@@ -27,10 +29,10 @@ direction_map{2} = [0, -1]; % down
 direction_map{3} = [-1, 0]; % left
 direction_map{4} = [1, 0]; % right
 
-% initializing the movement direction probabilities for all the states
+% initializing the movement direction probabilities
 states = zeros(map_size);
-states(target_loc(1,1), target_loc(1,2)) = 10;
-states(cat_loc(1,1), cat_loc(1,2)) = -10;
+states(target_loc(1,1), target_loc(1,2)) = 100;
+states(cat_loc(1,1), cat_loc(1,2)) = -100;
 
 for i = 1:map_size(1,1)
     for j = 1:map_size(1,2)
@@ -45,7 +47,7 @@ figure('units','normalized','outerposition',[0 0 1 1])
 for trial_no = 1:num_trials
     reach_target_bool = 0;
     reach_cat_bool = 0;
-    agent_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
+    agent_loc = [randi(map_size(1,1), 1, 1), randi(map_size(1,2), 1, 1)];
     step_no = 1;
     agent_locs = [];
     
@@ -62,14 +64,14 @@ for trial_no = 1:num_trials
         
         direction = direction_map{direction_no};
         check_mat = map_size - (agent_loc + direction);
-        if check_mat(1,1) > 0 && check_mat(1,2) > 0 && check_mat(1,1) < 15 && check_mat(1,2) < 15
+        if check_mat(1,1) > 0 && check_mat(1,2) > 0 && check_mat(1,1) < map_size(1,1) && check_mat(1,2) < map_size(1,2)
            agent_loc = agent_loc + direction;
         else
             while 1
-                i = ceil(rand(1,1)*num_directions);
+                i = randi(num_directions,1,1);
                 direction = direction_map{i};
                 check_mat = map_size - (agent_loc + direction);
-                if check_mat(1,1) > 0 && check_mat(1,2) > 0 && check_mat(1,1) < 15 && check_mat(1,2) < 15
+                if check_mat(1,1) > 0 && check_mat(1,2) > 0 && check_mat(1,1) < map_size(1,1) && check_mat(1,2) < map_size(1,2)
                     agent_loc = agent_loc + direction;
                     break
                 end
@@ -92,13 +94,19 @@ for trial_no = 1:num_trials
         subplot(2,3,3)
         imagesc(states);
         set(gca,'YDir','normal')
-        colormap hot
+        colormap jet
         colorbar
+        title('States')
         subplot(2,3,6)
         [fx,fy] = gradient(states);
         quiver(fx,fy)
+        title('Transitions')
         step_no = step_no + 1;
         pause(0.05)
         
+        if step_no>100
+            break
+        end
+            
     end
 end

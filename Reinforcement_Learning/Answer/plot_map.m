@@ -17,4 +17,6 @@ function plot_map(agent_loc, agent_locs, target_loc, cat_loc, map_size, rat_img,
     hold off
     xlim([0, map_size(1,1)+1])
     ylim([0, map_size(1,2)+1])
+    set(gca,'xticklabel',{[]})
+    set(gca,'yticklabel',{[]})
 end
