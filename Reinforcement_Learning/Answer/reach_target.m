@@ -2,9 +2,10 @@ function [states, transitions] = reach_target(states, transitions, direction_no,
     % updating state values
     states(agent_loc_past(1,1), agent_loc_past(1,2)) = states(agent_loc_past(1,1), agent_loc_past(1,2)) + ...
                                              learning_rate*states(agent_loc(1,1), agent_loc(1,2));
-    if states(agent_loc_past(1,1), agent_loc_past(1,2)) >  target_value
+                                         
+    if states(agent_loc_past(1,1), agent_loc_past(1,2)) >  target_value/2
         states(agent_loc_past(1,1), agent_loc_past(1,2)) = target_value - 1;
-    elseif states(agent_loc_past(1,1), agent_loc_past(1,2)) <  cat_value
+    elseif states(agent_loc_past(1,1), agent_loc_past(1,2)) <  cat_value/2
         states(agent_loc_past(1,1), agent_loc_past(1,2)) = cat_value + 1;
     end
     % updating transition values

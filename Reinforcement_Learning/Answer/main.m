@@ -17,9 +17,9 @@ learning_rate = 0.01;
 
 map_size = [15, 15];
 cat_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
-cat_loc = [7, 7];
+cat_loc = [12, 13];
 target_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
-target_loc = [12, 13];
+target_loc = [7, 7];
 
 map_mat_main = zeros(map_size);
 map_mat_main(cat_loc(1,1), cat_loc(1,2)) = -1;
@@ -68,10 +68,10 @@ for trial_no = 1:num_trials
         if length(unique(directions_probs)) == 1
            direction_no = ceil(num_directions*rand(1,1));
         else
-           [~, direction_no] = find(directions_probs == max(directions_probs)); 
+           rand_num = rand(1,1);
+           direction_no = choose_by_prob(directions_probs)
         end
         
-        direction_no = direction_no(randi(length(direction_no),1,1));
         direction = direction_map{direction_no};
         check_mat = map_size - (agent_loc + direction);
         if check_mat(1,1) > 0 && check_mat(1,2) > 0 && check_mat(1,1) < map_size(1,1) && check_mat(1,2) < map_size(1,2)
@@ -92,14 +92,18 @@ for trial_no = 1:num_trials
         end
 
         % checking location
+        
+        agent_locs = [agent_locs; agent_loc];
+        
         if agent_loc == target_loc
             reach_target_bool = 1;
         end
         if agent_loc == cat_loc
             reach_cat_bool = 1;
         end
-        agent_locs = [agent_locs; agent_loc];
+        
         [states, transitions] = reach_target(states, transitions, direction_no, learning_rate, agent_loc, agent_loc_past, target_value, cat_value);
+        
         
         if show_plot
             subplot(2,3,[1,2,4,5])
