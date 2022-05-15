@@ -2,7 +2,7 @@ clc
 clear
 close all
 
-save_figures = 1;
+save_figures = 0;
 show_plot = 0;
 % loading images
 rat_img = imread('assets/rat.png');
@@ -13,7 +13,8 @@ target_img = imread('assets/target.png');
 target_value = 100;
 cat_value = -100;
 num_trials = 1000;
-learning_rate = 0.01;
+learning_rate_main = 0.5;
+forgetting_factor = 0.999;
 
 map_size = [15, 15];
 cat_loc = [ceil(map_size(1,1)*rand(1,1)), ceil(map_size(1,2)*rand(1,1))];
@@ -34,8 +35,6 @@ direction_map{4} = [1, 0]; % right
 
 % initializing the movement direction probabilities
 states = zeros(map_size);
-states(target_loc(1,1), target_loc(1,2)) = target_value;
-states(cat_loc(1,1), cat_loc(1,2)) = cat_value;
 
 for i = 1:map_size(1,1)
     for j = 1:map_size(1,2)
@@ -47,7 +46,15 @@ end
 softmax_func = @(x) exp(x)/sum(exp(x));
 figure('units','normalized','outerposition',[0 0 1 1])
 
+states_r = states;
+states_r(target_loc(1,1), target_loc(1,2)) = target_value;
+states_r(cat_loc(1,1), cat_loc(1,2)) = cat_value;
+
 for trial_no = 1:num_trials
+    % applying the forgeting factor
+    states = states*forgetting_factor;
+
+    learning_rate = learning_rate_main/trial_no;
     reach_target_bool = 0;
     reach_cat_bool = 0;
     agent_loc = [randi(map_size(1,1), 1, 1), randi(map_size(1,2), 1, 1)];
@@ -65,12 +72,7 @@ for trial_no = 1:num_trials
 
         % deciding which direction to choose
         directions_probs = softmax_func(cell2mat(transitions(agent_loc(1,1), agent_loc(1,2))))
-        if length(unique(directions_probs)) == 1
-           direction_no = ceil(num_directions*rand(1,1));
-        else
-           rand_num = rand(1,1);
-           direction_no = choose_by_prob(directions_probs)
-        end
+        direction_no = choose_by_prob(directions_probs)
         
         direction = direction_map{direction_no};
         check_mat = map_size - (agent_loc + direction);
@@ -97,23 +99,25 @@ for trial_no = 1:num_trials
         
         if agent_loc == target_loc
             reach_target_bool = 1;
+            states(target_loc(1,1), target_loc(1,2)) = target_value;
         end
         if agent_loc == cat_loc
             reach_cat_bool = 1;
+            states(cat_loc(1,1), cat_loc(1,2)) = cat_value;
         end
-        
-        [states, transitions] = reach_target(states, transitions, direction_no, learning_rate, agent_loc, agent_loc_past, target_value, cat_value);
-        
-        
+
+        [states, transitions] = update_state_and_transition(states_r, states, transitions, direction_no, learning_rate, agent_loc, agent_loc_past, target_value, cat_value);
+
         if show_plot
             subplot(2,3,[1,2,4,5])
             plot_map(agent_loc, agent_locs, target_loc, cat_loc, map_size, rat_img, cat_img, target_img)
-            title("Trial "+num2str(trial_no)+" | "+"Step "+num2str(step_no))
+            title("Trial "+num2str(trial_no)+" | "+"Step "+num2str(step_no)+" | LR "+num2str(learning_rate))
             subplot(2,3,3)
             imagesc(states);
             set(gca,'YDir','normal')
-            colormap jet
+            colormap bone
             colorbar
+            caxis([cat_value, target_value])
             title('States')
             subplot(2,3,6)
             [fx,fy] = gradient(states);
@@ -122,13 +126,13 @@ for trial_no = 1:num_trials
             pause(0.01)
         end
         
-        step_no = step_no + 1
-        
+        step_no = step_no + 1;
+
         if step_no>100
             break
         end
-            
     end
+    
     if mod(trial_no, 20)==1
         if save_figures
             set(gcf,'PaperPositionMode','auto')
