@@ -3,8 +3,10 @@ clear
 close all
 
 save_figures = 1;
+video_boolian = 1;
 show_plot = 0;
-save_freq = 100;
+save_freq = 1;
+
 % loading images
 rat_img = imread('assets/rat.png');
 cat_img = imread('assets/cat.png');
@@ -13,7 +15,7 @@ target_img = imread('assets/target.png');
 % configs
 target_value = 2;
 cat_value = -2;
-num_trials = 1000;
+num_trials = 200;
 learning_rate_main = 0.1;
 forgetting_factor = 1;
 discount_factor = 1;
@@ -48,7 +50,14 @@ end
 % defining the softmax function
 softmax_func = @(x) exp(x)/sum(exp(x));
 
-figure('units','normalized','outerposition',[0 0 1 1])
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+
+
+if video_boolian
+    writerObj = VideoWriter("videos/Demo_1");
+    writerObj.FrameRate = 50;
+    open(writerObj);
+end
 
 states_r = zeros(map_size);
 states_r(target_loc(1,1), target_loc(1,2)) = target_value;
@@ -66,7 +75,7 @@ for trial_no = 1:num_trials
     step_no = 1;
     agent_locs = [];
     
-    if mod(trial_no, save_freq)==1
+    if mod(trial_no-1, save_freq)==0
         show_plot = 1;
     else
         show_plot = 0;
@@ -128,36 +137,51 @@ for trial_no = 1:num_trials
             [fx,fy] = gradient(states);
             quiver(fx,fy)
             title('States Gradients')            
-            pause(0.01)
         end
         
         step_no = step_no + 1;
         agent_loc_past = agent_loc;
         
+        if video_boolian
+            frame = getframe(fig);
+            for frame_index = 1:2
+                writeVideo(writerObj,frame);
+            end
+        else
+            pause(0.01)
+        end
+    
         if step_no>max_steps
             break
         end
     end
     num_steps(trial_no) = step_no;
-    if mod(trial_no, save_freq)==1
+    if mod(trial_no-1, save_freq)==0
         if save_figures
             set(gcf,'PaperPositionMode','auto')
             print("images/trial_"+num2str(trial_no),'-dpng','-r0')
         end
     end
+    
 end
 
+if video_boolian
+    close(writerObj)
+end
 %% Step numbers vs trials
 
 clc
 clear
 close all
 
+save_figures = 1;
+
 % configs
 target_value = 2;
 cat_value = -2;
-num_trials = 1000;
-num_iters = 100;
+num_trials = 1001;
+trial_step = 2;
+num_iters = 200;
 learning_rate_main = 0.1;
 forgetting_factor = 1;
 discount_factor = 1;
@@ -201,7 +225,7 @@ for iter_no = 1:num_iters
     states_r(target_loc(1,1), target_loc(1,2)) = target_value;
     states_r(cat_loc(1,1), cat_loc(1,2)) = cat_value;
 
-    for trial_no = 1:num_trials
+    for trial_no = 1:trial_step:num_trials
         % applying the forgeting factor
         states = states*forgetting_factor;
 
@@ -265,23 +289,30 @@ for iter_no = 1:num_iters
     end
 end
 
-plot(1:num_trials, mean(num_steps, 1), 'k')
+plot(1:trial_step:num_trials, mean(num_steps(:, 1:trial_step:num_trials), 1), 'k', 'LineWidth', 1)
 xlabel('Trial No')
 ylabel('Num of Steps')
 title('Num of steps to reach target vs Trials')
+xlim([1, num_trials])
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Q02",'-dpng','-r0')
+end
 %% Effect of learning factor and discount factor
 clc
 clear
 close all
 
-learning_rates = 0.1:0.2:1;
-discount_factors = 0.1:0.2:1;
+save_figures = 1;
+
+learning_rates = 0.1:0.3:1;
+discount_factors = 0.1:0.3:1;
 
 % configs
 target_value = 2;
 cat_value = -2;
-num_trials = 100;
+num_trials = 400;
 num_iters = 10;
 forgetting_factor = 1;
 max_steps = 200;
@@ -394,7 +425,7 @@ for learning_rate = learning_rates
             end
         end
         num_steps = mean(num_steps, 1);
-        steps_mat(lr_index, df_index) = mean(num_steps(end-10:end));
+        steps_mat(lr_index, df_index) = mean(num_steps(end-50:end));
     end
 end
 
@@ -402,21 +433,27 @@ imagesc(learning_rates, discount_factors, steps_mat)
 set(gca,'YDir','normal')
 ylabel('Learning Rate')
 xlabel('Discount Factor')
-colorbar
+c = colorbar;
 colormap bone
-
+c.Label.String = 'Avg number of steps to reach the target';
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Q03",'-dpng','-r0')
+end
 %% Effect of learning factor and discount factor - 2 targets
 clc
 clear
 close all
 
-learning_rates = 0.1:0.2:1;
-discount_factors = 0.1:0.2:1;
+save_figures = 1;
+
+learning_rates = 0.1:0.3:1;
+discount_factors = 0.1:0.3:1;
 
 % configs
 target_value = 2;
 cat_value = -2;
-num_trials = 100;
+num_trials = 400;
 num_iters = 10;
 forgetting_factor = 1;
 max_steps = 200;
@@ -541,17 +578,23 @@ imagesc(learning_rates, discount_factors, steps_mat)
 set(gca,'YDir','normal')
 ylabel('Learning Rate')
 xlabel('Discount Factor')
-colorbar
-colormap bone
 
+c = colorbar;
+colormap bone
+c.Label.String = 'Avg number of steps to reach the target';
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Q04",'-dpng','-r0')
+end
 %% TD Rule
 clc
 clear
 close all
 
-save_figures = 0;
+save_figures = 1;
 show_plot = 0;
-save_freq = 2;
+save_freq = 1;
+video_boolian = 1;
 
 % loading images
 rat_img = imread('assets/rat.png');
@@ -596,7 +639,14 @@ end
 % defining the softmax function
 softmax_func = @(x) exp(x)/sum(exp(x));
 
-figure('units','normalized','outerposition',[0 0 1 1])
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+
+
+if video_boolian
+    writerObj = VideoWriter("videos/Demo_2");
+    writerObj.FrameRate = 50;
+    open(writerObj);
+end
 
 states_r = zeros(map_size);
 states_r(target_loc(1,1), target_loc(1,2)) = target_value;
@@ -615,7 +665,7 @@ for trial_no = 1:num_trials
     agent_locs = [agent_loc_past];
     direction_nos = [1];
     
-    if mod(trial_no, save_freq)==1
+    if mod(trial_no-1, save_freq) == 0
         show_plot = 1;
     else
         show_plot = 0;
@@ -677,21 +727,29 @@ for trial_no = 1:num_trials
             [fx,fy] = gradient(states);
             quiver(fx,fy)
             title('States Gradients')            
-            pause(0.01)
         end
         
         step_no = step_no + 1;
         agent_loc_past = agent_loc;
+        
+        if video_boolian
+            frame = getframe(fig);
+            for frame_index = 1:2
+                writeVideo(writerObj,frame);
+            end
+        else
+            pause(0.01)
+        end
         
         if step_no>max_steps
             break
         end
     end
     num_steps(trial_no) = step_no;
-    if mod(trial_no, save_freq)==1
+    if mod(trial_no-1, save_freq) == 0
         if save_figures
             set(gcf,'PaperPositionMode','auto')
-            print("images/trial_"+num2str(trial_no),'-dpng','-r0')
+            print("images/trial_TD_"+num2str(trial_no),'-dpng','-r0')
         end
     end
 end

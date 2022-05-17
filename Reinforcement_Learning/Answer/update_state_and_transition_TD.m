@@ -3,7 +3,7 @@ function [states, transitions] = update_state_and_transition_TD(states_r, states
                                                         discount_factor, target_value, cat_value,...
                                                         softmax_func, agent_locs)
 
-    lambda = 0.9;                                                
+    lambda = 0.99;                                                
     for i = size(agent_locs, 1):-1:2
         agent_loc_past = agent_locs(i-1, :);
         agent_loc = agent_locs(i, :);
