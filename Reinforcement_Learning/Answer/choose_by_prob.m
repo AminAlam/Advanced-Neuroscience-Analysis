@@ -1,6 +1,6 @@
 function direction_no = choose_by_prob(directions_probs)
     rand_num = rand();
-    wood = [0];
+    wood = 0;
     counter = 1;
     for i = directions_probs
         wood = [wood, wood(end)+i];
@@ -10,5 +10,4 @@ function direction_no = choose_by_prob(directions_probs)
         end
         counter = counter+1;
     end 
-
 end

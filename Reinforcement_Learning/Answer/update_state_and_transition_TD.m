@@ -25,14 +25,13 @@ function [states, transitions] = update_state_and_transition_TD(states_r, states
         end
 
         % updating transition values
-        for i = 1:length(transition)
-            if i == direction_no
-                transition(1, i) = transition(1, i) + (1-probs(1, i)) * delta;
+        for j = 1:length(transition)
+            if j == direction_no
+                transition(1, j) = transition(1, j) + (1-probs(1, j)) * delta;
             else
-                transition(1, i) = transition(1, i) - probs(1, i) * delta;  
+                transition(1, j) = transition(1, j) - probs(1, j) * delta;  
             end
         end
         transitions(agent_loc_past(1,1), agent_loc_past(1,2)) = {transition};
-    
     end
 end
