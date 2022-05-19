@@ -110,9 +110,80 @@ ylabel('Error (percantage of wrong choices)')
 legend('Simulation', 'Theory')
 ylim([0,0.6])
 %% plots for report - theory part proof
+clc
+close all
+
+save_figures = 1;
+
+x = -5:.1:5;
+y = normpdf(x,0,1);
+plot(x,y, 'k', 'LineWidth', 2)
+
+xl = xline(0, '--', '\mu');
+xl.LabelVerticalAlignment = 'middle';
+xl.LabelHorizontalAlignment = 'center';
+xl.FontSize = 20;
+
+xl = xline(-4, '--', '\mu + -4\sigma');
+xl.LabelVerticalAlignment = 'middle';
+xl.LabelHorizontalAlignment = 'center';
+xl.FontSize = 20;
+
+xl = xline(4, '--', '\mu + 4\sigma');
+xl.LabelVerticalAlignment = 'middle';
+xl.LabelHorizontalAlignment = 'center';
+xl.FontSize = 20;
+
+xlim([-5 5])
+ylim([0, 0.5])
+
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print('Report/images/normal_proof','-dpng','-r0')
+end
 
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q04 - Mean and variance of X in different times
+clc
+close all
 
+num_iters = 200;
+sigma = 1;
+dt = 0.1;
+time_interval = 0:dt:10;
+bias = 0.1;
+
+X = zeros(length(time_interval), num_iters);
+for iter = 1:num_iters
+    [X(:, iter), ~] = simple_model(bias, sigma, dt, time_interval);
+end
+
+mean_X = mean(X, 2);
+var_X = var(X, 1, 2);
+
+subplot(3,1,1)
+plot(time_interval, X, 'k')
+xlabel('Time (s)')
+title('X during different trials')
+
+subplot(3,1,2)
+plot(time_interval, mean_X, 'k', 'LineWidth', 2)
+hold on
+plot(time_interval, bias*time_interval, '--r', 'LineWidth', 2)
+xlabel('Time (s)')
+title('Expected Value of X(t)')
+legend('Simluation', 'Theory', 'Location', 'northwest')
+
+subplot(3,1,3)
+plot(time_interval, var_X, 'k', 'LineWidth', 2)
+hold on
+plot(time_interval, sigma*time_interval, '--r', 'LineWidth', 2)
+xlabel('Time (s)')
+title('Variance of X(t)')
+legend('Simluation', 'Theory', 'Location', 'northwest')
 
 
 
