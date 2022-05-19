@@ -1,4 +1,4 @@
-% Q02 - simulation for Go/No Go Task
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q02 - simulation for Go/No Go Task
 clc
 clear
 close all
@@ -6,10 +6,10 @@ close all
 num_iters = 20;
 sigma = 1;
 dt = 0.1;
-time_interval = 1;
+time_interval = 0:dt:1;
 
 bias = 0;
-X = zeros(floor(time_interval/dt), num_iters);
+X = zeros(length(time_interval), num_iters);
 choices = zeros(1, num_iters);
 for iter = 1:num_iters
     [X(:, iter), choices(1, iter)] = simple_model(bias, sigma, dt, time_interval);
@@ -24,7 +24,7 @@ qqplot(reshape(X, [], 1))
 
 
 bias = 1;
-X = zeros(floor(time_interval/dt), num_iters);
+X = zeros(length(time_interval), num_iters);
 choices = zeros(1, num_iters);
 for iter = 1:num_iters
     [X(:, iter), choices(1, iter)] = simple_model(bias, sigma, dt, time_interval);
@@ -38,9 +38,9 @@ figure
 qqplot(reshape(X, [], 1))
 
 figure
-plot((1:floor(time_interval/dt))*dt, mean(X, 2), 'k', 'LineWidth', 2)
+plot(time_interval, mean(X, 2), 'k', 'LineWidth', 2)
 hold on
-plot((1:floor(time_interval/dt))*dt, X', '--k')
+plot(time_interval, X', '--k')
 legend('Avg of all Iteratoins', 'Differnet Iterations', 'Location', 'northwest')
 xlabel('Time (s)')
 ylabel('X')
@@ -50,9 +50,9 @@ close all
 
 sigma = 1;
 dt = 0.1;
-time_interval = 10;
+time_interval = 0:dt:10;
 biases = [-1, 0, 0.1, 1, 10];
-X = zeros(length(biases), floor(time_interval/dt));
+X = zeros(length(biases), length(time_interval));
 
 bias_index = 1;
 for bias = biases
@@ -60,7 +60,34 @@ for bias = biases
     bias_index = bias_index+1;
 end
 
-plot((1:floor(time_interval/dt))*dt, X, 'LineWidth', 2)
+plot(time_interval, X, 'LineWidth', 2)
 xlabel('Time (s)')
 ylabel('X')
 legend('B = -1', 'B = 0', 'B = 0.1', 'B = 1', 'B = 10', 'Location', 'northwest')
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q03 - Relatoin between Error rate and time
+clc
+close all
+
+num_iters = 1000;
+sigma = 1;
+dt = 0.1;
+bias = 0.1;
+times = 0.5:1:10;
+error = zeros(1, length(times));
+time_index = 1;
+for time = times
+    time_interval = 0:dt:time;
+    choices = zeros(1, num_iters);
+    X = zeros(length(time_interval), num_iters);
+    for iter = 1:num_iters
+        [X(:, iter), choices(1, iter)] = simple_model(bias, sigma, dt, time_interval);
+    end
+    error(1, time_index) = 1-sum(choices == sign(bias))/length(choices);
+    time_index = time_index+1;
+end
+
+plot(times, error, 'k', 'LineWidth', 2)
+xlabel('Time Intervals')
+ylabel('Error (percantage of wrong choices)')
+ylim([0,0.6])
