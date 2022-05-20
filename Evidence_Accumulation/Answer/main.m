@@ -281,11 +281,55 @@ for bias_index = 1:length(biases)
     title("Bias = "+num2str(biases(bias_index)))
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q06 - Simulating situation of free response
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q07 - Simulating situation of free response
+clc
+close all
+num_iters = 10000;
+thresholds = [-10, 10];
+bias = 0.1;
+sigma = 1;
+X_0 = 0;
+dt = 0.01;
 
+ts = zeros(1, num_iters);
+choices = zeros(1, num_iters);
+for iter_no = 1:num_iters
+    [t, choice] = two_choice_trial(thresholds, bias, sigma, X_0, dt);
+    ts(1, iter_no) = t; 
+    choices(1, iter_no) = choice; 
+end
 
+figure
+hist_all = histogram(ts, 'Normalization', 'pdf');
+hist_all_bins = (hist_all.BinEdges(2:end)+hist_all.BinEdges(1:end-1))/2;
+hist_all_values = hist_all.Values;
 
+hist_correct = histogram(ts(choices==1), 'Normalization', 'pdf');
+hist_correct_bins = (hist_correct.BinEdges(2:end)+hist_correct.BinEdges(1:end-1))/2;
+hist_correct_values = hist_correct.Values;
 
+hist_wrong = histogram(ts(choices==-1), 'Normalization', 'pdf');
+hist_wrong_bins = (hist_wrong.BinEdges(2:end)+hist_wrong.BinEdges(1:end-1))/2;
+hist_wrong_values = hist_wrong.Values;
+
+plot(hist_all_bins/dt, hist_all_values*dt, 'k', 'LineWidth', 2)
+hold on
+pd = makedist('InverseGaussian', 'mu', thresholds(2)/bias, 'lambda', (thresholds(2)/sigma)^2);
+pdf_values = pdf(pd, hist_all_bins/dt);
+plot(hist_all_bins/dt, pdf_values, 'R', 'LineWidth', 2)
+xlabel('Reaction Time')
+ylabel('Probability Density')
+legend('Simulation', 'Theory')
+
+figure
+hold on
+plot(hist_correct_bins/dt, hist_correct_values*dt, 'b', 'LineWidth', 2)
+plot(hist_wrong_bins/dt, hist_wrong_values*dt, 'r', 'LineWidth', 2)
+xlabel('Reaction Time')
+ylabel('Probability Density')
+legend('Correct choices', 'Wrong choices')
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q08 - Simulating situation of free response
 
 
 
