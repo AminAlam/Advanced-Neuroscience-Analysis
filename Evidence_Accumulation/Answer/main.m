@@ -150,7 +150,7 @@ end
 clc
 close all
 
-num_iters = 200;
+num_iters = 1000;
 sigma = 1;
 dt = 0.1;
 time_interval = 0:dt:10;
@@ -167,7 +167,7 @@ var_X = var(X, 1, 2);
 subplot(3,1,1)
 plot(time_interval, X, 'k')
 xlabel('Time (s)')
-title('X during different trials')
+title('X(t) during different trials')
 
 subplot(3,1,2)
 plot(time_interval, mean_X, 'k', 'LineWidth', 2)
@@ -175,7 +175,7 @@ hold on
 plot(time_interval, bias*time_interval, '--r', 'LineWidth', 2)
 xlabel('Time (s)')
 title('Expected Value of X(t)')
-legend('Simluation', 'Theory', 'Location', 'northwest')
+legend('Simulation', 'Theory', 'Location', 'northwest')
 
 subplot(3,1,3)
 plot(time_interval, var_X, 'k', 'LineWidth', 2)
@@ -183,7 +183,110 @@ hold on
 plot(time_interval, sigma*time_interval, '--r', 'LineWidth', 2)
 xlabel('Time (s)')
 title('Variance of X(t)')
-legend('Simluation', 'Theory', 'Location', 'northwest')
+legend('Simulation', 'Theory', 'Location', 'northwest')
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q05 - Calculating the probability of right choice 
+%                                       using the CDF of normal distribution 
+clc
+close all
+
+bias = 0;
+sigma = 1;
+Xs_0 = -10:1:10;
+time_limits = 1:1:100;
+
+probs = zeros(length(time_limits), length(Xs_0));
+
+X_0_index = 1;
+for X_0 = Xs_0
+    time_limit_index = 1;
+    for time_limit = time_limits
+        p = simple_model2(bias, sigma, X_0, time_limit);
+        probs(time_limit_index, X_0_index) = p;
+        time_limit_index = time_limit_index+1;
+    end
+    X_0_index = X_0_index+1;
+end
+
+figure
+hold on
+map = bone(length(time_limits));
+for time_limit_index = 1:length(time_limits)
+    plot(Xs_0, probs(time_limit_index, :), 'color', map(time_limit_index, :), 'LineWidth', 1)
+end
+xlabel('Start Point')
+ylabel('Probability')
+ylim([0, 1])    
+colormap(map)
+c = colorbar('Ticks', [time_limits(1), time_limits(end/2), time_limits(end)], 'TickLabels', ...
+        {num2str(time_limits(1)), num2str(time_limits(end/2)), num2str(time_limits(end))});
+c.Label.String = 'Time Limit (s)';
+caxis([time_limits(1), time_limits(end)])
+
+figure
+imagesc(Xs_0, time_limits, probs)
+set(gca,'YDir','normal')
+xlabel('Start Point')
+ylabel('Time Limit (s)')
+colormap bone
+c = colorbar;
+c.Label.String = 'Probability';
+
+
+% 3D plot for showing effect of bias
+biases = -0.2:0.1:0.2;
+probs = zeros(length(biases), length(time_limits), length(Xs_0));
+bias_index = 1;
+
+for bias = biases
+    X_0_index = 1;
+    for X_0 = Xs_0
+        time_limit_index = 1;
+        for time_limit = time_limits
+            p = simple_model2(bias, sigma, X_0, time_limit);
+            probs(bias_index, time_limit_index, X_0_index) = p;
+            time_limit_index = time_limit_index+1;
+        end
+        X_0_index = X_0_index+1;
+    end
+    bias_index = bias_index+1;
+end
+
+figure
+
+for bias_index = 1:length(biases)
+    for time_limit_index = 1:length(time_limits)
+        plot3(zeros(size(Xs_0))+biases(bias_index), Xs_0, squeeze(probs(bias_index, time_limit_index, :)), 'color', map(time_limit_index, :), 'LineWidth', 1)
+        hold on
+    end
+end
+xlabel('Bias')
+ylabel('Start Point')
+zlabel('Probability')
+colormap bone
+c = colorbar;
+c.Label.String = 'Time Limit (s)';
+
+for bias_index = 1:length(biases)
+    figure
+    for time_limit_index = 1:length(time_limits)
+        plot(Xs_0, squeeze(probs(bias_index, time_limit_index, :)), 'color', map(time_limit_index, :), 'LineWidth', 1)
+        hold on
+    end
+    xlabel('Start Point')
+    ylabel('Probability')
+    colormap bone
+    c = colorbar;
+    c.Label.String = 'Time Limit (s)';
+    title("Bias = "+num2str(biases(bias_index)))
+end
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q06 - Simulating situation of free response
+
+
+
+
+
 
 
 
