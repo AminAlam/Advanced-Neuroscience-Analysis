@@ -330,7 +330,37 @@ ylabel('Probability Density')
 legend('Correct choices', 'Wrong choices')
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q08 - Simulating situation of free response
+clc
+close all
+threshold = 10;
+biases = 1:1:10;
+sigma = 1;
+X_0 = [0;0];
+dt = 0.01;
+num_iters = 1000;
+stats = zeros(length(biases), length(biases), num_iters);
 
+bias_1_index = 1;
+for bias_1 = biases
+    bias_2_index = 1;
+    for bias_2 = biases
+        bias = [bias_1; bias_2];
+        for iter_no = 1:num_iters
+            stats(bias_1_index, bias_2_index, iter_no)  = race_trial(threshold, bias, sigma, X_0, dt);
+        end
+        bias_2_index = bias_2_index+1;
+    end
+    bias_1_index = bias_1_index+1;
+end
 
+imagesc(biases, biases, 100*sum(stats==1, 3)/size(stats, 3))
+set(gca,'YDir','normal')
+xlabel('Bias of Choice 2')
+ylabel('Bias of Choice 1')
+colormap bone
+c = colorbar;
+c.Label.String = 'Win Rate of Choice no 1';
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Q09 - Simulating situation of free response with time limit
 
 
