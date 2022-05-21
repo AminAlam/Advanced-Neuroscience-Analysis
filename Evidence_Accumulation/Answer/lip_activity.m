@@ -15,7 +15,7 @@ function [rt, LIP_event_times, MT, times] = lip_activity(MT_p_values, LIP_weight
     MT = [];
     times = [];
     while rate < LIP_threshold
-        times = [t, times];
+        times = [times, t];
         t = t + dt;
         dN = rand(2, 1) < MT_p_values;
         MT = [MT, dN];

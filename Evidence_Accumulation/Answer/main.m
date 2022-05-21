@@ -491,7 +491,7 @@ hold on
 scatter(lip_event_times, lip_event_times*0+3, 'k', 'filled')
 scatter(times(MT(1,:)==1), MT(1, MT(1,:)==1)*0+2, 'b', 'filled')
 scatter(times(MT(2,:)==1), MT(2, MT(2,:)==1)*0+1, 'r', 'filled')
-legend('LIP Event Times', 'MT Neuron excitatory', 'MT Neuron inhibitory')
+legend('LIP Neuron', 'MT Neuron excitatory', 'MT Neuron inhibitory')
 ylim([0, 4])
 xlim([lip_event_times(1)-0.01, lip_event_times(end)+0.01])
 xlabel('Time (s)')
@@ -514,6 +514,33 @@ ylabel('Probability of Firing')
 legend('MT Neuron 1', 'MT Neuron 2')
 
 
+LIP_weights = [0.1 -0.1; -0.1 0.1];
+num_iters = 100;
+[LIP_spikes, MT, times] = lip_activity_enhanced(LIP_weights, stimuli_values, Mt_neuron_1, Mt_neuron_2, num_iters);
+
+figure
+hold on
+scatter(times(LIP_spikes(1,:)==1), LIP_spikes(LIP_spikes(1,:)==1)*0+3, 'k', 'filled')
+scatter(times(LIP_spikes(2,:)==1), LIP_spikes(LIP_spikes(2,:)==1)*0+2, 'm', 'filled')
+scatter(times(MT(1,:)==1), MT(1, MT(1,:)==1)*0+1, 'b', 'filled')
+scatter(times(MT(2,:)==1), MT(2, MT(2,:)==1)*0, 'r', 'filled')
+legend('LIP1 = MT1-MT2', 'LIP2 = -MT1+MT2', 'MT Neuron 1', 'MT Neuron 2')
+ylim([0, 4])
+xlim([times(1)-0.01, times(end)+0.01])
+xlabel('Time (s)')
 
 
+LIP_weights = [0.1 0.1; 0.1 -0.1];
+num_iters = 100;
+[LIP_spikes, MT, times] = lip_activity_enhanced(LIP_weights, stimuli_values, Mt_neuron_1, Mt_neuron_2, num_iters);
 
+figure
+hold on
+scatter(times(LIP_spikes(1,:)==1), LIP_spikes(LIP_spikes(1,:)==1)*0+3, 'k', 'filled')
+scatter(times(LIP_spikes(2,:)==1), LIP_spikes(LIP_spikes(2,:)==1)*0+2, 'm', 'filled')
+scatter(times(MT(1,:)==1), MT(1, MT(1,:)==1)*0+1, 'b', 'filled')
+scatter(times(MT(2,:)==1), MT(2, MT(2,:)==1)*0, 'r', 'filled')
+legend('LIP1 = MT1+MT2', 'LIP2 = MT1-MT2', 'MT Neuron 1', 'MT Neuron 2')
+ylim([0, 4])
+xlim([times(1)-0.01, times(end)+0.01])
+xlabel('Time (s)')
