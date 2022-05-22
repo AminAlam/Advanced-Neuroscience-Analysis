@@ -260,7 +260,7 @@ for time_limit_index = 1:length(time_limits)
 end
 xlabel('Start Point')
 ylabel('Probability')
-ylim([0, 1])    
+ylim([0, 1])
 colormap(map)
 c = colorbar('Ticks', [time_limits(1), time_limits(end/2), time_limits(end)], 'TickLabels', ...
         {num2str(time_limits(1)), num2str(time_limits(end/2)), num2str(time_limits(end))});
