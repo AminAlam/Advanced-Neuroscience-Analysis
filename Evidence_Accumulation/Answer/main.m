@@ -8,7 +8,7 @@ save_figures = 1;
 num_iters = 20;
 sigma = 1;
 dt = 0.1;
-time_interval = 0:dt:1;
+time_interval = 0:dt:10;
 
 bias = 0;
 X = zeros(length(time_interval), num_iters);
@@ -496,6 +496,11 @@ ylim([0, 4])
 xlim([lip_event_times(1)-0.01, lip_event_times(end)+0.01])
 xlabel('Time (s)')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Part2_Q1",'-dpng','-r0')
+end
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Part 2 - Q02 - MR neurons with prefered orientation 
 clc
 close all
@@ -514,6 +519,12 @@ ylabel('Probability of Firing')
 legend('MT Neuron 1', 'MT Neuron 2')
 
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Part2_Q2_1",'-dpng','-r0')
+end
+
+
 LIP_weights = [0.1 -0.1; -0.1 0.1];
 num_iters = 100;
 [LIP_spikes, MT, times] = lip_activity_enhanced(LIP_weights, stimuli_values, Mt_neuron_1, Mt_neuron_2, num_iters);
@@ -529,6 +540,10 @@ ylim([0, 4])
 xlim([times(1)-0.01, times(end)+0.01])
 xlabel('Time (s)')
 
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Part2_Q2_2",'-dpng','-r0')
+end
 
 LIP_weights = [0.1 0.1; 0.1 -0.1];
 num_iters = 100;
@@ -544,3 +559,8 @@ legend('LIP1 = MT1+MT2', 'LIP2 = MT1-MT2', 'MT Neuron 1', 'MT Neuron 2')
 ylim([0, 4])
 xlim([times(1)-0.01, times(end)+0.01])
 xlabel('Time (s)')
+
+if save_figures
+    set(gcf,'PaperPositionMode','auto')
+    print("Report/images/Part2_Q2_3",'-dpng','-r0')
+end
