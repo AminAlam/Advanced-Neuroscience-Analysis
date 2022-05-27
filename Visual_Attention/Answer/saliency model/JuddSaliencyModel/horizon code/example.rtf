@@ -1,0 +1,20 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf350
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww9000\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs24 \cf0 Here is the horizon line estimator. It uses the function LMgist from the  Labelme toolbox.\
+\
+Just load an image (it is trained on street scenes), and do:\
+\
+h = getHorizon(img);\
+\
+To visualize:\
+\
+[nrows ncols cc] = size(img);\
+figure\
+imshow(img)\
+hold on\
+plot([1 ncols], ([h h]+.5)*nrows, 'b', 'linewidth',3);\
+}

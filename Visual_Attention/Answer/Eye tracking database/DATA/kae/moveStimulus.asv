@@ -1,0 +1,1 @@
+for i = 1:length(files)   filename = fullfile('STIMULI', strcat(files(i).name(1:end-4), '.jpeg'));   newfilename = fullfile('STIMULIDONE', strcat(files(i).name(1:end-4), '.jpeg'));   if exist(filename)      movefile(filename, newfilename);    end   iend
