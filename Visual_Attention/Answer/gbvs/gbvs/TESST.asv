@@ -1,0 +1,12 @@
+
+clc;
+clear all;
+load('TEST.mat')
+
+
+
+score = rocScoreSaliencyVsFixations(salmap,X,Y,origimgsize)
+
+
+
+
