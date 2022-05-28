@@ -116,7 +116,7 @@ load model;
 datafolder = "Eye tracking database/DATA/hp";
 files=dir(fullfile(datafolder,'*.mat'));
 [filenames{1:size(files,1)}] = deal(files.name);
-filenames = filenames(1:10);
+filenames = filenames(1:100);
 scores_first_half = zeros(numel(filenames), 8);
 scores_second_half = zeros(numel(filenames), 8);
 file_no = 0;
@@ -203,4 +203,9 @@ for file_name = filenames
     end
 end
 
+%%
+histogram(scores_first_half)
+hold on
+histogram(scores_second_half)
 
+xlim([0 1])
