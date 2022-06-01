@@ -119,7 +119,7 @@ files=dir(fullfile(datafolder,'*.mat'));
 [filenames{1:size(files,1)}] = deal(files.name);
 
 subject_names = {"CNG", "ajs", "emb", "ems", "ff", "hp", "jcw", "jw", "kae", "krl", "po", "tmj", "tu", "ya", "zb"};
-filenames = filenames(1:10);
+filenames = filenames(11:end);
 scores_first_half = zeros(numel(subject_names), numel(filenames), 8);
 scores_second_half = zeros(numel(subject_names), numel(filenames), 8);
 
@@ -174,6 +174,8 @@ for file_name = filenames
     
     figure
     imshow(img)
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
     figure
     imshow(255*saliencyMap/max(saliencyMap, [], 'all'))
     hold on
@@ -181,15 +183,11 @@ for file_name = filenames
     scatter(X_first_half(1), Y_first_half(1), 'g', 'filled')
     scatter(X_first_half(end), Y_first_half(end), 'r', 'filled')
     colormap gray
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
     pause
     close all
 end
-
-
-
-
-
-
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% comparing saliency maps to fixations 
 clc
 clear

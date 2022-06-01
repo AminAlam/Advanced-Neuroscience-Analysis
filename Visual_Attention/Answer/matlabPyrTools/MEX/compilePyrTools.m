@@ -7,9 +7,10 @@
 %
 % Rob Young, 9/08
 clc
-mex -setup CPP upConv.c convolve.c wrap.c edges.c
-mex -setup CPP corrDn.c convolve.c wrap.c edges.c
-mex -setup CPP histo.c
+mex  upConv.c convolve.c wrap.c edges.c
+mex corrDn.c convolve.c wrap.c edges.c
+mex  histo.c
 %mex innerProd.c
-mex -setup CPP pointOp.c
-mex -setup CPP range2.c
+mex pointOp.c
+mex  range2.c
+% -compatibleArrayDims
