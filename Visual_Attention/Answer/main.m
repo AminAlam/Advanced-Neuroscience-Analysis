@@ -233,6 +233,8 @@ for file_name = filenames
     close all
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% comparing saliency maps to fixations 
+
+% presence of each feature
 clc
 clear
 close all
@@ -263,6 +265,8 @@ P = randperm(numel(filenames));
 filenames = filenames(P(1:100));
 scores_first_half = zeros(numel(subject_names), numel(filenames), 8);
 scores_second_half = zeros(numel(subject_names), numel(filenames), 8);
+scores_first_half_absence = zeros(numel(subject_names), numel(filenames), 8);
+scores_second_half_absence = zeros(numel(subject_names), numel(filenames), 8);
 
 file_no = 0;
 for file_name = filenames
@@ -315,7 +319,6 @@ for file_name = filenames
         for type = 1:8
             w = model.w;
             if (type==1) %subband
-                w(:, 1:12) = 0;
                 w(:, 14:end) = 0;
             elseif (type==2) %Itti
                 w(:, 1:13) = 0;
@@ -350,14 +353,47 @@ for file_name = filenames
             score_second_half = rocScoreSaliencyVsFixations(saliencyMap,X_second_half,Y_second_half,origimgsize);
             scores_second_half(subject_no, file_no, type) = score_second_half;
         end
+        
+        for type = 1:8
+            w = model.w;
+            if (type==1) %subband
+                w(:, 1:13) = 0;
+            elseif (type==2) %Itti
+                w(:, 14:16) = 0;
+            elseif (type==3) %Color
+                w(:, 17:27) = 0;
+            elseif type==4 %Torralba
+                w(:, 28) = 0;
+            elseif type==5 %Horizon
+                w(:, 29) = 0;
+            elseif type==6 %Object
+                w(:, 31) = 0;
+            elseif type==7 %Center
+                w(:, 33) = 0;
+            elseif type==8 %all
+                w = model.w;
+            end
+            
+            % find the saliency map given the features and the model
+            saliencyMap = (FEATURES*w(1:end-1)') + w(end);
+            saliencyMap = (saliencyMap-min(saliencyMap))/(max(saliencyMap)-min(saliencyMap));
+            saliencyMap = reshape(saliencyMap, dims);
+            saliencyMap = imresize(saliencyMap, [w_img, h]);
+
+            score_first_half = rocScoreSaliencyVsFixations(saliencyMap,X_first_half,Y_first_half,origimgsize);
+            scores_first_half_absence(subject_no, file_no, type) = score_first_half;
+
+            score_second_half = rocScoreSaliencyVsFixations(saliencyMap,X_second_half,Y_second_half,origimgsize);
+            scores_second_half_absence(subject_no, file_no, type) = score_second_half;
+        end
     end
 end
-%%
+
 save('Scores.mat', 'scores_first_half', 'scores_second_half')
-%%
-clc
-close all
+save('Scores_absence.mat', 'scores_first_half_absence', 'scores_second_half_absence')
 load Scores.mat
+load Scores_absence.mat
+
 for type = 1:8
     figure
     hist = histogram(scores_first_half(:,:,type), 'Normalization', 'pdf');
@@ -379,8 +415,26 @@ for type = 1:8
     save_figure("Report/images/score/type_"+num2str(type))
 end
 
-
-
+for type = 1:8
+    figure
+    hist = histogram(scores_first_half_absence(:,:,type), 'Normalization', 'pdf');
+    values_first = hist.Values;
+    edges_first = hist.BinEdges;
+    edges_first = (edges_first(1:end-1)+edges_first(2:end))/2;
+    hist = histogram(scores_second_half_absence(:,:,type), 'Normalization', 'pdf');
+    values_second = hist.Values;
+    edges_second = hist.BinEdges;
+    edges_second = (edges_second(1:end-1)+edges_second(2:end))/2; 
+    plot(edges_first, values_first, 'k', 'LineWidth', 2)
+    hold on
+    plot(edges_second, values_second, 'm', 'LineWidth', 2)
+    hold off
+    xlim([0.0 1.1])
+    xlabel('AUC')
+    ylabel('Probability Density')
+    legend('First Half', 'Second Half', 'Location', 'northwest')
+    save_figure("Report/images/score/type_"+num2str(type)+"_absence")
+end
 
 
 
