@@ -22,8 +22,10 @@ Y = round(Y * scale);
 
 X(X<1) = 1;
 X(X>salmapsize(2)) = salmapsize(2);
+X(isnan(X)) = [];
 Y(Y<1) = 1;
 Y(Y>salmapsize(1)) = salmapsize(1);
+Y(isnan(Y)) = [];
 
 mask = zeros( salmapsize );
 for i = 1 : length(X)
