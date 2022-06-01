@@ -34,10 +34,35 @@ addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSienc
 addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/features/';
 addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/imagemanipulation/';
 
-imagefile = '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/Eye tracking database/ALLSTIMULI/i64011654.jpeg';
+
+
+datafolder = "Eye tracking database/DATA/hp";
+files=dir(fullfile(datafolder,'*.mat'));
+[filenames{1:size(files,1)}] = deal(files.name);
+
+file_number = 240;
+
+imagefile = filenames(file_number);
+imagefile = imagefile{1};
+imagefile = imagefile(1:end-4);
+file_name = imagefile;
+datafolder = "Eye tracking database/";
+imagefile = datafolder+"ALLSTIMULI/"+imagefile+".jpeg";
 FEATURES_all = saliency(imagefile);
 
 load model;
+
+subject_name = "hp";
+datafolder = "Eye tracking database/";
+data_file = datafolder+"DATA/"+subject_name+"/"+file_name+".mat";
+data = load(data_file);
+data = data.(sprintf("%s", file_name)).DATA.eyeData;
+
+X_first_half = data(1:floor(end/2), 1);
+Y_first_half = data(1:floor(end/2), 2);
+
+X_second_half = data(floor(end/2)+1:end, 1);
+Y_second_half = data(floor(end/2)+1:end, 2);
 
 img = imread(imagefile);
 [w, h, c] = size(img);
@@ -46,6 +71,16 @@ dims = [200, 200];
 
 figure
 imshow(img)
+hold on
+plot(X_first_half, Y_first_half, '.y')
+scatter(X_first_half(1), Y_first_half(1), 'g', 'filled')
+scatter(X_first_half(end), Y_first_half(end), 'r', 'filled')
+colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+
+save_figure("Report/images/saliency/only_img"+num2str(file_number))
+
 
 for type = 1:8
     if (type==1) %subband
@@ -91,6 +126,17 @@ for type = 1:8
     saliencyMap = imresize(saliencyMap, [w, h]);
     figure
     imshow(saliencyMap*255/max(saliencyMap, [], 'all'))
+    colormap gray;
+    
+    hold on
+    plot(X_first_half, Y_first_half, '.y')
+    scatter(X_first_half(1), Y_first_half(1), 'g', 'filled')
+    scatter(X_first_half(end), Y_first_half(end), 'r', 'filled')
+    colormap gray
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+    
+    save_figure("Report/images/saliency/only_img"+num2str(file_number)+"_"+num2str(type))
 end
 
 %% showing eye positoin on saliency map
@@ -120,13 +166,12 @@ files=dir(fullfile(datafolder,'*.mat'));
 
 subject_names = {"CNG", "ajs", "emb", "ems", "ff", "hp", "jcw", "jw", "kae", "krl", "po", "tmj", "tu", "ya", "zb"};
 filenames = filenames(11:end);
-scores_first_half = zeros(numel(subject_names), numel(filenames), 8);
-scores_second_half = zeros(numel(subject_names), numel(filenames), 8);
 
 subject_name = subject_names(1);
  
-
+file_counter = 0;
 for file_name = filenames
+    file_counter = file_counter+1;
     file_name = file_name{1};
     file_name = file_name(1:end-4);
 
@@ -176,6 +221,9 @@ for file_name = filenames
     imshow(img)
     set(gca,'xtick',[])
     set(gca,'ytick',[])
+    
+    save_figure("Report/images/saliency/img"+num2str(file_counter))
+    
     figure
     imshow(255*saliencyMap/max(saliencyMap, [], 'all'))
     hold on
@@ -185,7 +233,9 @@ for file_name = filenames
     colormap gray
     set(gca,'xtick',[])
     set(gca,'ytick',[])
-    pause
+    save_figure("Report/images/saliency/img"+num2str(file_counter)+"_saliency")
+    pause(0.2)
+    
     close all
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% comparing saliency maps to fixations 
