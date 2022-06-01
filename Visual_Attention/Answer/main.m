@@ -39,7 +39,7 @@ datafolder = "Eye tracking database/DATA/hp";
 files=dir(fullfile(datafolder,'*.mat'));
 [filenames{1:size(files,1)}] = deal(files.name);
 
-file_number = 440;
+file_number = 940;
 
 imagefile = filenames(file_number);
 imagefile = imagefile{1};
@@ -107,8 +107,7 @@ for type = 1:8
         w(:, 1:29) = 0;
         w(:, 32:end) = 0;
     elseif type==7 %Center
-        w(:, 1:31) = 0;
-        w(:, 33:end) = 0;
+        w(:, 1:32) = 0;
     elseif type==8 %all
         w = model.w;
     end
@@ -334,8 +333,7 @@ for file_name = filenames
                 w(:, 1:29) = 0;
                 w(:, 32:end) = 0;
             elseif type==7 %Center
-                w(:, 1:31) = 0;
-                w(:, 33:end) = 0;
+                w(:, 1:32) = 0;
             elseif type==8 %all
                 w = model.w;
             end
@@ -359,7 +357,7 @@ save('Scores.mat', 'scores_first_half', 'scores_second_half')
 %%
 clc
 close all
-
+load Scores.mat
 for type = 1:8
     figure
     hist = histogram(scores_first_half(:,:,type), 'Normalization', 'pdf');
@@ -372,7 +370,7 @@ for type = 1:8
     edges_second = (edges_second(1:end-1)+edges_second(2:end))/2; 
     plot(edges_first, values_first, 'k', 'LineWidth', 2)
     hold on
-    plot(edges_second, values_second, '--m', 'LineWidth', 2)
+    plot(edges_second, values_second, 'm', 'LineWidth', 2)
     hold off
     xlim([0.0 1.1])
     xlabel('AUC')
