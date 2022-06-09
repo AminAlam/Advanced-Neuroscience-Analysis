@@ -47,9 +47,24 @@ for i = 1:10
     end
     IMAGES(:,:,i) = img;
 end
-
+IMAGESr = IMAGES;
+% whitening images
+for img_index = 1:size(IMAGES, 3)
+    img = IMAGES(:,:,img_index);
+    img = img/max(img,[],'all');  
+    img = img-mean(img, 'all');
+    IMAGES_tmp(:,:,img_index) = img(13:end-12,:);
+end
+IMAGES = IMAGES_tmp;
+IMAGES = whitener(IMAGES);
 % showing the images
 for img_index = 1:size(IMAGESr, 3)
+    % raw images
+    figure
+    img = IMAGESr(:,:,img_index)-min(IMAGESr(:,:,img_index),[],'all');
+    img = img*255/max(img,[],'all');
+    imshow(img);
+    colormap gray
     % whitened images
     figure
     img = IMAGES(:,:,img_index)-min(IMAGES(:,:,img_index),[],'all');
@@ -71,15 +86,23 @@ close all
 IMAGES = load('data/mnist.mat');
 IMAGES = IMAGES.test.images;
 IMAGES = IMAGES(:,:,1:10);
+IMAGESr = IMAGES;
 % whitening images
-for img_index = 1:size(IMAGESr, 3)
+for img_index = 1:size(IMAGES, 3)
     img = IMAGES(:,:,img_index);
     img = img/max(img,[],'all');  
     img = img-mean(img, 'all');
     IMAGES(:,:,img_index) = img;
 end
-%% showing the images
+IMAGES = whitener(IMAGES);
+% showing the images
 for img_index = 1:size(IMAGESr, 3)
+    % raw images
+    figure
+    img = IMAGESr(:,:,img_index)-min(IMAGESr(:,:,img_index),[],'all');
+    img = img*255/max(img,[],'all');
+    imshow(img);
+    colormap gray
     % whitened images
     figure
     img = IMAGES(:,:,img_index)-min(IMAGES(:,:,img_index),[],'all');
@@ -87,8 +110,7 @@ for img_index = 1:size(IMAGESr, 3)
     imshow(img);
     colormap gray
 end
-
-%% showing basis functions
+% showing basis functions
 
 A = rand(64)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));

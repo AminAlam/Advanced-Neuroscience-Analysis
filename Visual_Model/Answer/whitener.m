@@ -12,7 +12,9 @@ function IMAGES = whitener(IMAGES)
         image=IMAGES(:,:,i);
         If=fft2(image);
         imagew=real(ifft2(If.*fftshift(filt)));
-        IMAGES(:,:,i)=imagew;
+        IMAGES_tmp(:,i)=reshape(imagew,N^2,1);
     end
 
+    IMAGES_tmp=sqrt(0.1)*IMAGES_tmp/sqrt(mean(var(IMAGES_tmp)));
+    IMAGES = reshape(IMAGES_tmp, size(IMAGES));
 end
