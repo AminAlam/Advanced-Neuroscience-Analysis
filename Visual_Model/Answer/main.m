@@ -436,7 +436,7 @@ else
 end
 
 sudden_moves = [38, 60, 80, 88];
-patchs = [1, 15, 30, 45, 80, 100];
+patchs = [1, 23, 50, 84, 120, 157];
 for patch_no = patchs
     figure
     for sudden_move = sudden_moves
@@ -452,6 +452,8 @@ for patch_no = patchs
     ylabel('Basis Functions')
     title("Patch No."+num2str(patch_no))
     legend('Sudden Moves')
+    
+    save_figure("Report/images/Q3/patch_1_"+num2str(patch_no))
     
     figure
     array=zeros(1+m*(sz+1),1+n*(sz+1));
@@ -478,10 +480,12 @@ for patch_no = patchs
     hold on
     img_imagesc = imagesc(img_imagesc);
     img_imagesc.AlphaData = 0.5;
-    hold off 
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+    hold off
+    save_figure("Report/images/Q3/patch_2_"+num2str(patch_no))
 end
-
-%% %%%%%%%%%%%%%%% the role of attention models in the basis functions
+%% %%%%%%%%%%%%%%% The role of attention models in the basis functions
 clc
 close all
 
@@ -498,12 +502,16 @@ addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSienc
 addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/features/';
 addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/imagemanipulation/';
 
-[w_img, h, c] = size(img);
+
 dims = [200, 200];
 load model;
 
-for frame_no = 1:10%size(frames)
+load data/IMAGES.mat
+load data/IMAGES_RAW.mat
+
+for frame_no = [11:10:41]
     img = frames(:,:,:,frame_no);
+    [w_img, h, c] = size(img);
     FEATURES = saliency_from_image(img);
     
     saliencyMap = (FEATURES*model.w(1:end-1)') + model.w(end);
@@ -513,25 +521,49 @@ for frame_no = 1:10%size(frames)
     
     saliencyMaps(:,:,frame_no) = saliencyMap;
 end
+
 %% finding most salient parts
-img = saliencyMaps(:,:,6);
-imshow(img/max(img,[],'all')*255);
-img = img > 3*mean(img,'all');
-figure
-img = uint8(img/max(img,[],'all')*255);
-imshow(img);
+for frame_no = [1:3:10,11:10:41]
+    figure
+    imshow(frames(:,:,:,frame_no))
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+    save_figure("Report/images/Q3/saliency/img"+num2str(frame_no))
+    
+    figure
+    img = saliencyMaps(:,:,frame_no);
+    imshow(img/max(img,[],'all')*255);
+    img = img > 3*mean(img,'all');
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+    save_figure("Report/images/Q3/saliency/img_sm_"+num2str(frame_no))
+    
+    figure
+    img = uint8(img/max(img,[],'all')*255);
+    imshow(img);
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+        save_figure("Report/images/Q3/saliency/img_mask_"+num2str(frame_no))
 
-
+    
+end
 %% calculating the basis functions
-
 clc
 close all
 
-A = rand(256, 100)-0.5;
+IMAGES = frames_prep(:,:,1:10);
+
+num_trials = 5000;
+A = rand(64, 196)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet_with_attention
 
+figure(1)
+save_figure("Report/images/Q3/saliency/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
+figure(2)
+save_figure("Report/images/Q3/saliency/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 
 
 

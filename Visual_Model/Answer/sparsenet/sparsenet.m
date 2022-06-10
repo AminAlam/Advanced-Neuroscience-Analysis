@@ -3,8 +3,8 @@
 % Before running you must first define A and load IMAGES.
 % See the README file for further instructions.
 
-num_trials=10000;
-batch_size=100;
+
+batch_size= 100;
 
 num_images=size(IMAGES,3);
 image_size=size(IMAGES,1);
