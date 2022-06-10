@@ -25,16 +25,30 @@ end
 figure
 montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q1/img_raw")
+
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
-
-% showing basis functions
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q1/img_whittened")
+%% calculating the basis functions
 clc
-A = rand(256, 64)-0.5;
+close all
+num_trials = 10000;
+A = rand(64, 196)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+figure(1)
+save_figure("Report/images/Q1/basis_funtions_"+size(A, 1))
+
+figure(2)
+save_figure("Report/images/Q1/norm_basis_funtions_"+size(A, 1))
 %% %%%%%%%%%%%%%%% part 2 - Study the effect of different datasets
 
 % %%%%%% yale
@@ -79,15 +93,29 @@ end
 figure
 montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/img_raw")
+
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/img_whittened")
 
-% showing basis functions
-A = rand(256)-0.5;
+%% calculating the basis functions
+num_trials = 1000;
+A = rand(256, 196)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+figure(1)
+save_figure("Report/images/Q2/basis_funtions_"+size(A, 1))
+
+figure(2)
+save_figure("Report/images/Q2/norm_basis_funtions_"+size(A, 1))
 
 %% %%%%%% MNIST
 clc
@@ -395,7 +423,56 @@ for patch_no = patchs
 end
 
 %% %%%%%%%%%%%%%%% the role of attention models in the basis functions
-addpath 'gbvs/'
 clc
 close all
+
+% calculating the saliency maps
+
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/saliency model/JuddSaliencyModel';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/saliency model';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/matlabPyrTools/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/SaliencyToolbox/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/voc-release5/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/voc-release5/features/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/FaceDetect/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/features/';
+addpath '/Users/mohammadaminalamalhod/Documents/University/University/NeuroSience_Ghazi_Advanced/HWs/Visual_Attention/Answer/LabelMeToolbox-master/imagemanipulation/';
+
+[w_img, h, c] = size(img);
+dims = [200, 200];
+load model;
+
+for frame_no = 1:10%size(frames)
+    img = frames(:,:,:,frame_no);
+    FEATURES = saliency_from_image(img);
+    
+    saliencyMap = (FEATURES*model.w(1:end-1)') + model.w(end);
+    saliencyMap = (saliencyMap-min(saliencyMap))/(max(saliencyMap)-min(saliencyMap));
+    saliencyMap = reshape(saliencyMap, dims);
+    saliencyMap = imresize(saliencyMap, [w_img, h]);
+    
+    saliencyMaps(:,:,frame_no) = saliencyMap;
+end
+%% finding most salient parts
+img = saliencyMaps(:,:,6);
+imshow(img/max(img,[],'all')*255);
+img = img > 3*mean(img,'all');
+figure
+img = uint8(img/max(img,[],'all')*255);
+imshow(img);
+
+
+%% calculating the basis functions
+
+clc
+close all
+
+A = rand(256, 100)-0.5;
+A = A*diag(1./sqrt(sum(A.*A)));
+figure(1), colormap(gray)
+sparsenet_with_attention
+
+
+
 
