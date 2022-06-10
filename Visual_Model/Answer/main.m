@@ -38,17 +38,17 @@ save_figure("Report/images/Q1/img_whittened")
 %% calculating the basis functions
 clc
 close all
-num_trials = 10000;
-A = rand(64, 196)-0.5;
+num_trials = 5000;
+A = rand(256, 100)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
 
 figure(1)
-save_figure("Report/images/Q1/basis_funtions_"+size(A, 1))
+save_figure("Report/images/Q1/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 
 figure(2)
-save_figure("Report/images/Q1/norm_basis_funtions_"+size(A, 1))
+save_figure("Report/images/Q1/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 %% %%%%%%%%%%%%%%% part 2 - Study the effect of different datasets
 
 % %%%%%% yale
@@ -95,27 +95,27 @@ montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
 set(gca,'xtick',[])
 set(gca,'ytick',[])
-save_figure("Report/images/Q2/img_raw")
+save_figure("Report/images/Q2/yale/img_raw")
 
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
 set(gca,'xtick',[])
 set(gca,'ytick',[])
-save_figure("Report/images/Q2/img_whittened")
+save_figure("Report/images/Q2/yale/img_whittened")
 
 %% calculating the basis functions
-num_trials = 1000;
-A = rand(256, 196)-0.5;
+num_trials = 5000;
+A = rand(256, 100)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
 
 figure(1)
-save_figure("Report/images/Q2/basis_funtions_"+size(A, 1))
+save_figure("Report/images/Q2/yale/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 
 figure(2)
-save_figure("Report/images/Q2/norm_basis_funtions_"+size(A, 1))
+save_figure("Report/images/Q2/yale/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 
 %% %%%%%% MNIST
 clc
@@ -151,15 +151,30 @@ end
 figure
 montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/mnist/img_raw")
+
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/mnist/img_whittened")
 
-% showing basis functions
-A = rand(64)-0.5;
+%% calculating the basis functions
+num_trials = 5000;
+A = rand(256, 100)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+figure(1)
+save_figure("Report/images/Q2/mnist/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
+figure(2)
+save_figure("Report/images/Q2/mnist/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
 
 %% %%%%%% caltech 110
 clc
@@ -202,15 +217,29 @@ end
 figure
 montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/caltech/img_raw")
+
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q2/caltech/img_whittened")
 
-% showing basis functions
-A = rand(64)-0.5;
+%% calculating the basis functions
+num_trials = 5000;
+A = rand(256, 100)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+figure(1)
+save_figure("Report/images/Q2/caltech/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
+figure(2)
+save_figure("Report/images/Q2/caltech/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
 
 %% %%%%%%%%%%%%%%% part 3 - Study the dynamics of the sparse coefficients
 clc
@@ -245,20 +274,29 @@ end
 figure
 montage(IMAGES_cell_raw,'size',[2,5])
 colormap gray
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q3/img_raw")
+
 figure
 montage(IMAGES_cell,'size',[2,5])
 colormap gray
-
+set(gca,'xtick',[])
+set(gca,'ytick',[])
+save_figure("Report/images/Q3/img_whittened")
 %% learning the basis functions
-clc
-close all
-
-IMAGES = frames_prep(:,:,1:10);
-
+num_trials = 5000;
 A = rand(256, 100)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+figure(1)
+save_figure("Report/images/Q3/basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
+figure(2)
+save_figure("Report/images/Q3/norm_basis_funtions_"+size(A, 1)+"_"+size(A, 2))
+
 
 %% calculating coefficients for each frame
 clc
@@ -293,9 +331,14 @@ end
 %% plotting the basis function which has the bigesst coeff for each of the patchs
 clc
 close all
-figure(1)
-figure(2)
-
+video_boolian = 1;
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+if video_boolian
+    writerObj = VideoWriter("videos/bird_overlay_basis_functions");
+    writerObj.FrameRate = 25;
+    open(writerObj);
+end
+    
 [L M]=size(A);
 sz=sqrt(L);
 buf=1;
@@ -313,7 +356,7 @@ for frame_no = 11:size(frames_prep, 3)
     array_all=-ones(1+m*(sz+1),1+n*(sz+1));
     [max_coeffs_all, max_coeffs_index_all] = maxk(S, 100);
         
-    for max_k = 30
+    for max_k = 1:50
         array=-ones(1+m*(sz+1),1+n*(sz+1));
         max_coeffs_index = max_coeffs_index_all(max_k,:);
         max_coeffs = max_coeffs_all(max_k,:);
@@ -337,7 +380,7 @@ for frame_no = 11:size(frames_prep, 3)
         array_all = array_all+array;
     end    
     
-    figure(1)
+    subplot(2,4,[1,2,5,6])
     img_imagesc = imagesc(array_all);
     set(gca,'YDir','normal')
     caxis([1, size(A,2)])
@@ -349,18 +392,34 @@ for frame_no = 11:size(frames_prep, 3)
     
     hold on
     img_imagesc = imagesc(img_imagesc);
-    img_imagesc.AlphaData = 0.4;
+    img_imagesc.AlphaData = 0.2;
+    caxis([-1.5, 1.5])
     colormap jet
-    caxis([-2, 2])
     hold off
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
     
-    figure(2)
+    subplot(2,4,2+[1,2,5,6])
     imagesc(array_all);
+    caxis([-1.5, 1.5])
     colormap jet
-    caxis([-2, 2])
-    pause(0.5)
+    sgtitle('Image with an overlay of sum of the basis functions for each patch')
+    set(gca,'xtick',[])
+    set(gca,'ytick',[])
+    
+    if video_boolian
+        frame = getframe(fig);
+        for frame_index = 1:4
+            writeVideo(writerObj,frame);
+        end
+    else
+        pause(0.2)
+    end
 end
 
+if video_boolian
+    close(writerObj)
+end
 %% patch plots
 clc
 close all
