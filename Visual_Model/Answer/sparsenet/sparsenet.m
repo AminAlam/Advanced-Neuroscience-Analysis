@@ -33,6 +33,11 @@ h=display_network(A,S_var);
 
 % main loop
 
+for image_no=1:size(IMAGES,3)
+    t = IMAGES(:,:,image_no);
+    IMAGES(:,:,image_no) = IMAGES(:,:,image_no)/sqrt(var(t(:))/VAR_GOAL);
+end
+
 for t=1:num_trials
 
     % choose an image for this batch

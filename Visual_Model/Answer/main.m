@@ -9,8 +9,7 @@ close all
 load data/IMAGES.mat
 load data/IMAGES_RAW.mat
 
-%% showing the images
-
+% showing the images
 for img_index = 1:size(IMAGESr, 3)
     % raw images
     figure
@@ -25,10 +24,10 @@ for img_index = 1:size(IMAGESr, 3)
     imshow(img);
     colormap gray
 end
-%% showing basis functions
+
+% showing basis functions
 clc
-close all
-A = rand(64)-0.5;
+A = rand(256)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
@@ -57,6 +56,7 @@ for img_index = 1:size(IMAGES, 3)
 end
 IMAGES = IMAGES_tmp;
 IMAGES = whitener(IMAGES);
+
 % showing the images
 for img_index = 1:size(IMAGESr, 3)
     % raw images
@@ -74,8 +74,7 @@ for img_index = 1:size(IMAGESr, 3)
 end
 
 % showing basis functions
-
-A = rand(64)-0.5;
+A = rand(256)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
@@ -95,6 +94,7 @@ for img_index = 1:size(IMAGES, 3)
     IMAGES(:,:,img_index) = img;
 end
 IMAGES = whitener(IMAGES);
+
 % showing the images
 for img_index = 1:size(IMAGESr, 3)
     % raw images
@@ -110,9 +110,59 @@ for img_index = 1:size(IMAGESr, 3)
     imshow(img);
     colormap gray
 end
-% showing basis functions
 
+% showing basis functions
 A = rand(64)-0.5;
 A = A*diag(1./sqrt(sum(A.*A)));
 figure(1), colormap(gray)
 sparsenet
+
+%% %%%%%% caltech 110
+clc
+close all
+IMAGES = zeros(140,140,10);
+
+for i = 1:10
+    if i <10
+        img = imread("data/caltech_101/image_"+num2str(i)+".jpeg");
+    end
+    if size(img, 3)>1
+        img = rgb2gray(img);
+    end
+    img = imresize(img, [140, 140]);
+    IMAGES(:,:,i) = img;
+end
+IMAGESr = IMAGES;
+% whitening images
+for img_index = 1:size(IMAGES, 3)
+    img = IMAGES(:,:,img_index);
+    img = img/max(img,[],'all');  
+    img = img-mean(img, 'all');
+    IMAGES(:,:,img_index) = img;
+end
+IMAGES = whitener(IMAGES);
+
+% showing the images
+for img_index = 1:size(IMAGESr, 3)
+    % raw images
+    figure
+    img = IMAGESr(:,:,img_index)-min(IMAGESr(:,:,img_index),[],'all');
+    img = img*255/max(img,[],'all');
+    imshow(img);
+    colormap gray
+    % whitened images
+    figure
+    img = IMAGES(:,:,img_index)-min(IMAGES(:,:,img_index),[],'all');
+    img = img*255/max(img,[],'all');
+    imshow(img);
+    colormap gray
+end
+
+% showing basis functions
+A = rand(64)-0.5;
+A = A*diag(1./sqrt(sum(A.*A)));
+figure(1), colormap(gray)
+sparsenet
+
+%% %%%%%%%%%%%%%%% part 3 - Study the dynamics of the sparse coefficients
+
