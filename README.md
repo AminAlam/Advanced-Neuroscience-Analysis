@@ -1,6 +1,6 @@
 # Advanced-Neuroscience-Analysis
 
-This repo contains solutions to the homework of the advanced neuroscience course which is instructed by Dr. Ghazizadeh at the Electrical engineering department of sharif university of technology.
+This repo contains solutions to the homework of the advanced neuroscience course which is instructed by Dr. Ghazizadeh at the electrical engineering department of sharif university of technology.
 The following topics are covered in this course and each topic has its homework:
 - [Evidence Accumulation](https://github.com/MohammadAminAlamalhoda/Advanced-Neuroscience-Analysis/tree/main/Evidence_Accumulation)
 - [Motivation and classical conditioning](https://github.com/MohammadAminAlamalhoda/Advanced-Neuroscience-Analysis/tree/main/Motivation_and_classical_conditioning)
